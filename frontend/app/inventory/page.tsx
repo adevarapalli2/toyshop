@@ -44,11 +44,11 @@ export default function InventoryOverview() {
   if (initializing || !user) return null;
 
   const kpiCards = kpi ? [
-    { label: 'Total SKUs',    value: kpi.totalSkus,   icon: '📦', color: '#1d4ed8', bg: 'linear-gradient(135deg,#1d4ed8,#0ea5e9)' },
-    { label: 'In Stock',      value: kpi.inStock,     icon: '✅', color: '#059669', bg: 'linear-gradient(135deg,#059669,#34d399)' },
-    { label: 'Low Stock',     value: kpi.lowStock,    icon: '⚠️', color: '#d97706', bg: 'linear-gradient(135deg,#d97706,#fbbf24)', pulse: true },
-    { label: 'Out of Stock',  value: kpi.outOfStock,  icon: '🔴', color: '#dc2626', bg: 'linear-gradient(135deg,#dc2626,#f87171)' },
-    { label: 'Inventory Value', value: `₹${kpi.totalValue.toLocaleString('en-IN')}`, icon: '💰', color: '#7c3aed', bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)' },
+    { label: 'Total SKUs',    value: kpi.totalSkus,   icon: '📦', color: '#1d4ed8', bg: 'linear-gradient(135deg,#1d4ed8,#0ea5e9)', href: '/inventory/products' },
+    { label: 'In Stock',      value: kpi.inStock,     icon: '✅', color: '#059669', bg: 'linear-gradient(135deg,#059669,#34d399)', href: '/inventory/products?stock=in_stock' },
+    { label: 'Low Stock',     value: kpi.lowStock,    icon: '⚠️', color: '#d97706', bg: 'linear-gradient(135deg,#d97706,#fbbf24)', pulse: true, href: '/inventory/products?stock=low_stock' },
+    { label: 'Out of Stock',  value: kpi.outOfStock,  icon: '🔴', color: '#dc2626', bg: 'linear-gradient(135deg,#dc2626,#f87171)', href: '/inventory/products?stock=out_of_stock' },
+    { label: 'Inventory Value', value: `₹${kpi.totalValue.toLocaleString('en-IN')}`, icon: '💰', color: '#7c3aed', bg: 'linear-gradient(135deg,#7c3aed,#a78bfa)', href: '/inventory/products' },
   ] : [];
 
   return (
@@ -61,7 +61,7 @@ export default function InventoryOverview() {
           {/* KPI Row */}
           <div className={styles.kpiRow}>
             {kpiCards.map(k => (
-              <div key={k.label} className={styles.kpiCard}>
+              <button key={k.label} className={styles.kpiCard} onClick={() => router.push(k.href)}>
                 <div className={styles.kpiIconWrap} style={{ background: k.bg }}>
                   <span>{k.icon}</span>
                 </div>
@@ -70,7 +70,7 @@ export default function InventoryOverview() {
                     style={{ color: k.color }}>{loading ? '—' : k.value}</div>
                   <div className={styles.kpiLabel}>{k.label}</div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 

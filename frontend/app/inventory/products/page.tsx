@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useSelector } from 'react-redux';
 import { Table, Input, Button, Tag, Tooltip, Popconfirm, message, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -24,14 +24,15 @@ const STOCK_FILTERS: { label: string; value: string; color: string }[] = [
   { label: '🔵 Overstock', value: 'overstock', color: '#1d4ed8' },
 ];
 
-export default function ProductsPage() {
+function ProductsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [stockFilter, setStockFilter] = useState('');
+  const [stockFilter, setStockFilter] = useState(searchParams.get('stock') ?? '');
   const [addOpen, setAddOpen] = useState(false);
   const [adjustProduct, setAdjustProduct] = useState<ProductRow | null>(null);
 
@@ -161,4 +162,9 @@ export default function ProductsPage() {
       <StockAdjustModal product={adjustProduct} open={!!adjustProduct} onClose={() => setAdjustProduct(null)} onSuccess={() => { setAdjustProduct(null); load(); }} />
     </div>
   );
+}
+
+import { Suspense } from 'react';
+export default function ProductsPageWrapper() {
+  return <Suspense><ProductsPage /></Suspense>;
 }
