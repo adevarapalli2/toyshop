@@ -1,0 +1,23 @@
+.root {
+  display: flex;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.formSide {
+  width: 50%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 48px;
+  background: #ffffff;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .formSide {
+    width: 100%;
+    padding: 40px 24px;
+  }
+}
