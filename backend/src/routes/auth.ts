@@ -99,4 +99,45 @@ router.get('/me', authenticate, async (req: AuthRequest, res: Response): Promise
   }
 });
 
+// PUT /api/auth/profile — update own name
+router.put('/profile', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { name } = req.body;
+  if (!name?.trim()) {
+    res.status(422).json({ success: false, message: 'Name is required' });
+    return;
+  }
+  try {
+    const [updated] = await db
+      .update(users)
+      .set({ name: name.trim() })
+      .where(eq(users.id, req.user!.id))
+      .returning({ id: users.id, email: users.email, name: users.name, role: users.role });
+    res.json({ success: true, user: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// PUT /api/auth/change-password — change own password
+router.put('/change-password', authenticate, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword || newPassword.length < 6) {
+    res.status(422).json({ success: false, message: 'Current password and new password (min 6 chars) required' });
+    return;
+  }
+  try {
+    const [user] = await db.select().from(users).where(eq(users.id, req.user!.id));
+    if (!user) { res.status(404).json({ success: false, message: 'User not found' }); return; }
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) { res.status(401).json({ success: false, message: 'Current password is incorrect' }); return; }
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await db.update(users).set({ passwordHash }).where(eq(users.id, req.user!.id));
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 export default router;
