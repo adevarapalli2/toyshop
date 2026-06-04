@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import authRouter from './routes/auth';
+import usersRouter from './routes/users';
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', project: 'ToyShop WMS' }));
 app.use('/api/auth', authRouter);
+app.use('/api/users', usersRouter);
 
 app.listen(PORT, () => {
   console.log(`ToyShop WMS backend running on http://localhost:${PORT}`);

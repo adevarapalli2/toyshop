@@ -8,4 +8,7 @@ export const authService = {
     api.post('/api/auth/forgot-password', { email }),
 
   getMe: () => api.get('/api/auth/me'),
+  updateProfile: (name: string) => api.put('/api/auth/profile', { name }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.put('/api/auth/change-password', { currentPassword, newPassword }),
 };

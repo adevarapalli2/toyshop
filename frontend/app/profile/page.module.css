@@ -1,0 +1,197 @@
+.root {
+  display: flex;
+  min-height: 100vh;
+  background: #f1f5f9;
+}
+
+.main {
+  margin-left: var(--nav-width, 220px);
+  flex: 1;
+  transition: margin-left 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  padding: 28px 32px 32px;
+  flex: 1;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.pageTitle {
+  margin: 0 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pageTitleIcon { color: #7c3aed; }
+
+.pageSub {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Two-column layout */
+.layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Identity card */
+.identityCard {
+  width: 260px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 32px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatarXl {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: 0 0 0 5px rgba(14,165,233,0.15);
+  margin-bottom: 16px;
+}
+
+.idName {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.idRoleTag {
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  margin-bottom: 12px !important;
+}
+
+.idEmail {
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.idEmailIcon { color: #94a3b8; }
+
+.idDivider {
+  width: 100%;
+  margin: 16px 0 !important;
+}
+
+.idMeta {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.idMetaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.idMetaLabel {
+  font-size: 12px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.idMetaValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Forms column */
+.forms {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.formCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.formCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.formCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.formCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.formCardSub {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.formFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.saveBtn {
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  height: 40px !important;
+}
+
+@media (max-width: 768px) {
+  .layout { flex-direction: column; }
+  .identityCard { width: 100%; }
+}

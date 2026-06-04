@@ -1,0 +1,108 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 28px;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Profile button */
+.profileBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 5px 14px 5px 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.profileBtn:hover {
+  background: #f1f5f9;
+  border-color: #93c5fd;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.1);
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.roleTag {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  padding: 1px 8px !important;
+  line-height: 18px !important;
+}
+
+.chevron {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 2px;
+}
+
+/* Dropdown info section */
+.dropdownInfo {
+  padding: 4px 2px;
+  min-width: 180px;
+}
+
+.dropdownName {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dropdownEmail {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
