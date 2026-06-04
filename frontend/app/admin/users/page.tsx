@@ -16,6 +16,7 @@ import {
 import { RootState } from '@/store/index';
 import { userService, UserRow, UserSummary } from '@/services/userService';
 import AppNav from '@/components/nav/AppNav';
+import TopBar from '@/components/nav/TopBar';
 import AddUserModal from '@/components/admin/AddUserModal';
 import EditUserModal from '@/components/admin/EditUserModal';
 import styles from './page.module.css';
@@ -160,6 +161,8 @@ export default function UsersPage() {
     <div className={styles.root}>
       <AppNav />
       <main className={styles.main}>
+        <TopBar title="User Management" />
+        <div className={styles.content}>
 
         {/* Page header */}
         <div className={styles.header}>
@@ -269,6 +272,8 @@ export default function UsersPage() {
             className={styles.table}
           />
         </div>
+
+        </div>{/* end .content */}
       </main>
 
       <AddUserModal open={addOpen} onClose={() => setAddOpen(false)} onSuccess={() => { setAddOpen(false); fetchUsers(); }} />

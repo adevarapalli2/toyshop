@@ -7,9 +7,16 @@
 .main {
   margin-left: var(--nav-width, 220px);
   flex: 1;
-  padding: 32px;
   transition: margin-left 0.25s ease;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.content {
+  padding: 28px 32px 32px;
+  flex: 1;
 }
 
 /* Header */

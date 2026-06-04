@@ -10,6 +10,7 @@ import {
 } from '@ant-design/icons';
 import { RootState } from '@/store/index';
 import AppNav from '@/components/nav/AppNav';
+import TopBar from '@/components/nav/TopBar';
 import styles from './page.module.css';
 
 const { Title, Text } = Typography;
@@ -48,6 +49,8 @@ export default function DashboardPage() {
     <div className={styles.root}>
       <AppNav />
       <main className={styles.main}>
+        <TopBar title="Dashboard" />
+        <div className={styles.content}>
 
         {/* Welcome banner */}
         <div className={styles.banner}>
@@ -94,6 +97,7 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        </div>{/* end .content */}
       </main>
     </div>
   );

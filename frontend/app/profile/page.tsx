@@ -9,6 +9,7 @@ import { RootState, AppDispatch } from '@/store/index';
 import { authService } from '@/services/authService';
 import { initializeAuth } from '@/store/slices/authSlice';
 import AppNav from '@/components/nav/AppNav';
+import TopBar from '@/components/nav/TopBar';
 import styles from './page.module.css';
 
 const { Title, Text } = Typography;
@@ -66,6 +67,8 @@ export default function ProfilePage() {
     <div className={styles.root}>
       <AppNav />
       <main className={styles.main}>
+        <TopBar title="My Profile" />
+        <div className={styles.content}>
 
         <div className={styles.header}>
           <Title level={3} className={styles.pageTitle}>
@@ -171,6 +174,8 @@ export default function ProfilePage() {
 
           </div>
         </div>
+
+        </div>{/* end .content */}
       </main>
     </div>
   );
