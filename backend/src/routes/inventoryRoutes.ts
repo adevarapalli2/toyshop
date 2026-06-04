@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { eq, desc, ilike, and, sql } from 'drizzle-orm';
+import { eq, desc, ilike, and, gte, lte, sql } from 'drizzle-orm';
 import { db } from '../db/index';
 import { products } from '../db/schema/products';
 import { inventory } from '../db/schema/inventory';
@@ -12,7 +12,12 @@ const router = Router();
 router.use(authenticate);
 
 // GET /api/inventory/overview
-router.get('/overview', async (_req: AuthRequest, res: Response): Promise<void> => {
+router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> => {
+  const { from, to } = req.query as { from?: string; to?: string };
+  const dateFrom = from ? new Date(from) : null;
+  const dateTo = to ? new Date(to) : null;
+  // extend dateTo to end of day
+  if (dateTo) dateTo.setHours(23, 59, 59, 999);
   try {
     const allRows = await db
       .select({
@@ -62,7 +67,12 @@ router.get('/overview', async (_req: AuthRequest, res: Response): Promise<void> 
       .orderBy(inventory.quantity)
       .limit(8);
 
-    // Recent movements
+    // Recent movements — filtered by date range if provided
+    const movDateFilter = and(
+      dateFrom ? gte(stockMovements.createdAt, dateFrom) : undefined,
+      dateTo   ? lte(stockMovements.createdAt, dateTo)   : undefined,
+    );
+
     const recent = await db
       .select({
         id: stockMovements.id, movementType: stockMovements.movementType,
@@ -70,14 +80,28 @@ router.get('/overview', async (_req: AuthRequest, res: Response): Promise<void> 
         createdAt: stockMovements.createdAt,
         productName: products.name, productSku: products.sku,
         performedByName: users.name,
+        quantityBefore: stockMovements.quantityBefore,
+        quantityAfter: stockMovements.quantityAfter,
       })
       .from(stockMovements)
       .innerJoin(products, eq(products.id, stockMovements.productId))
       .leftJoin(users, eq(users.id, stockMovements.performedBy))
+      .where(movDateFilter)
       .orderBy(desc(stockMovements.createdAt))
-      .limit(10);
+      .limit(15);
 
-    res.json({ success: true, kpi, categoryChart, alerts, recentMovements: recent });
+    // Period movement summary
+    const [periodSummary] = await db
+      .select({
+        totalIn:  sql<number>`coalesce(sum(case when movement_type='IN' then quantity else 0 end),0)`,
+        totalOut: sql<number>`coalesce(sum(case when movement_type='OUT' then quantity else 0 end),0)`,
+        totalAdj: sql<number>`coalesce(sum(case when movement_type='ADJUSTMENT' then 1 else 0 end),0)`,
+        count:    sql<number>`count(*)`,
+      })
+      .from(stockMovements)
+      .where(movDateFilter);
+
+    res.json({ success: true, kpi, categoryChart, alerts, recentMovements: recent, periodSummary });
   } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Server error' }); }
 });
 

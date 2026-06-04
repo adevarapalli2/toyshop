@@ -41,11 +41,12 @@ export const productService = {
 };
 
 export const inventoryService = {
-  overview: () => api.get<{
+  overview: (params?: { from?: string; to?: string }) => api.get<{
     success: boolean; kpi: InventoryKpi;
     categoryChart: { category: string; inStock: number; lowStock: number; outOfStock: number }[];
     alerts: AlertRow[]; recentMovements: MovementRow[];
-  }>('/api/inventory/overview'),
+    periodSummary: { totalIn: number; totalOut: number; totalAdj: number; count: number };
+  }>('/api/inventory/overview', { params }),
 
   movements: (p?: { search?: string; type?: string; page?: number; limit?: number }) =>
     api.get<{ success: boolean; data: MovementRow[] }>('/api/inventory/movements', { params: p }),
