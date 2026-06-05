@@ -52,12 +52,12 @@ export default function OrdersDashboard() {
     if(!user)return;
     const {from,to}=buildRange(rel,selMonth,selYear);
     setLoading(true);
-    const [aRes,oRes] = await Promise.all([
+    const [aRes,oRes] = await Promise.allSettled([
       orderService.analytics({from,to}),
       orderService.list({from,to,page:1}),
     ]);
-    setAnalytics(aRes.data as unknown as OrderAnalytics);
-    setRecent((oRes.data.data??[]).slice(0,10));
+    if(aRes.status==='fulfilled') setAnalytics(aRes.value.data as unknown as OrderAnalytics);
+    if(oRes.status==='fulfilled') setRecent((oRes.value.data.data??[]).slice(0,10));
     setLoading(false);
   },[user,rel,selMonth,selYear]);
 

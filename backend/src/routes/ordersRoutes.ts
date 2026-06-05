@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { eq, desc, ilike, and, gte, lte, or, sql } from 'drizzle-orm';
+import { eq, desc, ilike, and, gte, lte, or, sql, inArray } from 'drizzle-orm';
 import { db } from '../db/index';
 import { orders } from '../db/schema/orders';
 import { orderItems } from '../db/schema/orderItems';
@@ -173,7 +173,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     const ids = rows.map(r => r.id);
     const counts = ids.length > 0
       ? await db.select({ orderId: orderItems.orderId, count: sql<number>`count(*)` })
-          .from(orderItems).where(sql`${orderItems.orderId} = ANY(${ids})`).groupBy(orderItems.orderId)
+          .from(orderItems).where(inArray(orderItems.orderId, ids)).groupBy(orderItems.orderId)
       : [];
     const countMap = new Map(counts.map(c => [c.orderId, Number(c.count)]));
 
