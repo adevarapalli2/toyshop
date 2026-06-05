@@ -1,0 +1,24 @@
+.wrap { display: flex; flex-direction: column; gap: 3px; min-width: 100px; }
+
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 700; border-radius: 20px;
+  padding: 2px 8px; width: fit-content;
+}
+.in_stock    { color: #065f46; background: #d1fae5; }
+.low_stock   { color: #92400e; background: #fef3c7; }
+.out_of_stock{ color: #991b1b; background: #fee2e2; }
+.overstock   { color: #1e40af; background: #dbeafe; }
+
+.qtyRow { display: flex; align-items: baseline; gap: 2px; }
+.qty { font-size: 15px; font-weight: 800; }
+.maxLabel { font-size: 11px; color: #94a3b8; }
+
+.barTrack {
+  height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden;
+}
+.barFill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+.bar_in_stock    { background: linear-gradient(90deg, #10b981, #34d399); }
+.bar_low_stock   { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.bar_out_of_stock{ background: #ef4444; }
+.bar_overstock   { background: linear-gradient(90deg, #3b82f6, #60a5fa); }

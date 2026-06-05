@@ -20,7 +20,7 @@ export default function ForgotPasswordForm() {
       await authService.forgotPassword(values.email);
       setSent(true);
     } catch {
-      setSent(true); // still show success to prevent user enumeration
+      setSent(true);
     } finally {
       setLoading(false);
     }
@@ -29,74 +29,56 @@ export default function ForgotPasswordForm() {
   if (sent) {
     return (
       <div className={styles.container}>
-        <Result
-          icon={<span style={{ fontSize: 56 }}>✅</span>}
-          title={<span className={styles.resultTitle}>Check your inbox</span>}
-          subTitle={
-            <span className={styles.resultSub}>
-              If this email is registered, you&apos;ll receive a password reset link shortly.
-            </span>
-          }
-          extra={
-            <Link href="/login" className={styles.backLink}>
-              <ArrowLeftOutlined /> Back to Login
-            </Link>
-          }
-        />
+        <div className={styles.card}>
+          <Result
+            icon={<span style={{ fontSize: 56 }}>✅</span>}
+            title={<span className={styles.resultTitle}>Check your inbox</span>}
+            subTitle={<span className={styles.resultSub}>If this email is registered, you&apos;ll receive a password reset link shortly.</span>}
+            extra={
+              <Link href="/login" className={styles.backLink}>
+                <ArrowLeftOutlined /> Back to Login
+              </Link>
+            }
+          />
+        </div>
       </div>
     );
   }
 
   return (
     <div className={styles.container}>
-      <div className={styles.logoRow}>
-        <span className={styles.logoIcon}>🏭</span>
-        <span className={styles.logoText}>ToyShop WMS</span>
-      </div>
+      <div className={styles.card}>
+        <div className={styles.logoRow}>
+          <div className={styles.logoIconWrap}>🏭</div>
+          <span className={styles.logoText}>ToyShop WMS</span>
+        </div>
 
-      <Title level={2} className={styles.heading}>Reset Password</Title>
-      <Text className={styles.subheading}>
-        Enter your email and we&apos;ll send you a reset link
-      </Text>
+        <Title level={2} className={styles.heading}>Reset Password</Title>
+        <Text className={styles.subheading}>
+          Enter your email and we&apos;ll send you a reset link
+        </Text>
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        size="large"
-        className={styles.form}
-      >
-        <Form.Item
-          name="email"
-          rules={[
-            { required: true, message: 'Please enter your email' },
-            { type: 'email', message: 'Enter a valid email address' },
-          ]}
-        >
-          <Input
-            prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Email address"
-            autoComplete="email"
-          />
-        </Form.Item>
+        <Form form={form} layout="vertical" onFinish={onFinish} size="large" className={styles.form}>
+          <Form.Item name="email" rules={[{ required: true }, { type: 'email' }]}>
+            <Input
+              prefix={<MailOutlined style={{ color: '#a5b4fc' }} />}
+              placeholder="Email address"
+              autoComplete="email"
+            />
+          </Form.Item>
 
-        <Form.Item style={{ marginBottom: 0 }}>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            block
-            className={styles.submitBtn}
-          >
-            {loading ? 'Sending...' : 'Send Reset Link'}
-          </Button>
-        </Form.Item>
-      </Form>
+          <Form.Item style={{ marginBottom: 0 }}>
+            <Button type="primary" htmlType="submit" loading={loading} block className={styles.submitBtn}>
+              {loading ? 'Sending…' : 'Send Reset Link'}
+            </Button>
+          </Form.Item>
+        </Form>
 
-      <div className={styles.backRow}>
-        <Link href="/login" className={styles.backLink}>
-          <ArrowLeftOutlined /> Back to Login
-        </Link>
+        <div className={styles.backRow}>
+          <Link href="/login" className={styles.backLink}>
+            <ArrowLeftOutlined /> Back to Login
+          </Link>
+        </div>
       </div>
     </div>
   );

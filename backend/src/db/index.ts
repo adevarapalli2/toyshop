@@ -1,7 +1,11 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as dotenv from 'dotenv';
-import * as schema from './schema/users';
+import * as usersSchema from './schema/users';
+import * as productsSchema from './schema/products';
+import * as inventorySchema from './schema/inventory';
+import * as stockMovementsSchema from './schema/stockMovements';
+const schema = { ...usersSchema, ...productsSchema, ...inventorySchema, ...stockMovementsSchema };
 
 dotenv.config();
 
