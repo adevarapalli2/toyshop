@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { Form, Input, Button, Checkbox, Alert, Typography } from 'antd';
-import { MailOutlined, LockOutlined, WarningOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, WarningOutlined, SafetyOutlined } from '@ant-design/icons';
 import { loginUser, clearError } from '@/store/slices/authSlice';
 import { AppDispatch, RootState } from '@/store/index';
 import styles from './LoginForm.module.css';
@@ -84,7 +84,7 @@ export default function LoginForm() {
           </Form.Item>
 
           <div className={styles.rememberRow}>
-            <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)}>
+            <Checkbox checked={remember} onChange={e => setRemember(e.target.checked)}>
               <span className={styles.rememberLabel}>Remember me</span>
             </Checkbox>
             <Link href="/forgot-password" className={styles.forgotLink}>
@@ -100,17 +100,26 @@ export default function LoginForm() {
               block
               className={styles.submitBtn}
             >
-              {loading ? 'Signing in...' : 'Sign In →'}
+              {loading ? 'Signing in…' : 'Sign In →'}
             </Button>
           </Form.Item>
         </Form>
 
       </div>
 
-      <div className={styles.footer}>
-        <div className={styles.footerDot} />
-        <Text className={styles.footerText}>ToyShop Warehouse Management System v1.0</Text>
-        <div className={styles.footerDot} />
+      {/* Trust badges */}
+      <div className={styles.trustRow}>
+        <div className={styles.trustBadge}>
+          <span>🔒</span> 256-bit SSL Encrypted
+        </div>
+        <div className={styles.trustDot} />
+        <div className={styles.trustBadge}>
+          <span><SafetyOutlined /></span> Secure Login
+        </div>
+        <div className={styles.trustDot} />
+        <div className={styles.trustBadge}>
+          <span>🛡️</span> GDPR Compliant
+        </div>
       </div>
     </div>
   );
