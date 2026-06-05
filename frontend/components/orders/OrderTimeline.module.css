@@ -1,0 +1,13 @@
+.wrap { display:flex; flex-direction:column; }
+.step { display:flex; gap:12px; min-height:64px; }
+.left { display:flex; flex-direction:column; align-items:center; }
+.dot { width:28px; height:28px; border-radius:50%; border:2px solid #e2e8f0; background:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; transition:all .2s; }
+.line { width:2px; flex:1; background:#e2e8f0; margin:3px 0; transition:background .2s; }
+.lineDone { }
+.info { padding-bottom:20px; padding-top:2px; }
+.stepLabel { font-size:13px; font-weight:700; color:#94a3b8; transition:color .2s; }
+.done .stepLabel { color:#1e293b; }
+.active .stepLabel { font-size:14px; }
+.stepTime { font-size:11px; color:#64748b; margin-top:2px; }
+.stepBy { font-size:11px; color:#94a3b8; }
+.stepPending { font-size:11px; color:#cbd5e1; font-style:italic; margin-top:2px; }

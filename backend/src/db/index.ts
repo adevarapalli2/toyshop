@@ -5,7 +5,11 @@ import * as usersSchema from './schema/users';
 import * as productsSchema from './schema/products';
 import * as inventorySchema from './schema/inventory';
 import * as stockMovementsSchema from './schema/stockMovements';
-const schema = { ...usersSchema, ...productsSchema, ...inventorySchema, ...stockMovementsSchema };
+import * as customersSchema from './schema/customers';
+import * as ordersSchema from './schema/orders';
+import * as orderItemsSchema from './schema/orderItems';
+import * as orderTimelineSchema from './schema/orderTimeline';
+const schema = { ...usersSchema, ...productsSchema, ...inventorySchema, ...stockMovementsSchema, ...customersSchema, ...ordersSchema, ...orderItemsSchema, ...orderTimelineSchema };
 
 dotenv.config();
 

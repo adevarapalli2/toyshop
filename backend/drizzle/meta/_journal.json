@@ -15,6 +15,13 @@
       "when": 1780595942941,
       "tag": "0001_20260604_232900_add_inventory_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780672986273,
+      "tag": "0002_20260605_205304_add_orders_tables",
+      "breakpoints": true
     }
   ]
 }
