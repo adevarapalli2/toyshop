@@ -16,6 +16,8 @@ export const orders = pgTable('orders', {
   notes: text('notes'),
   estimatedDelivery: timestamp('estimated_delivery'),
   actualDelivery: timestamp('actual_delivery'),
+  trackingNumber: varchar('tracking_number', { length: 100 }),
+  shippedAt: timestamp('shipped_at'),
   createdBy: integer('created_by').references(() => users.id),
   assignedTo: integer('assigned_to').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
