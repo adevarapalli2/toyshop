@@ -9,7 +9,9 @@ import * as customersSchema from './schema/customers';
 import * as ordersSchema from './schema/orders';
 import * as orderItemsSchema from './schema/orderItems';
 import * as orderTimelineSchema from './schema/orderTimeline';
-const schema = { ...usersSchema, ...productsSchema, ...inventorySchema, ...stockMovementsSchema, ...customersSchema, ...ordersSchema, ...orderItemsSchema, ...orderTimelineSchema };
+import * as shipmentsSchema from './schema/shipments';
+import * as shipmentEventsSchema from './schema/shipmentEvents';
+const schema = { ...usersSchema, ...productsSchema, ...inventorySchema, ...stockMovementsSchema, ...customersSchema, ...ordersSchema, ...orderItemsSchema, ...orderTimelineSchema, ...shipmentsSchema, ...shipmentEventsSchema };
 
 dotenv.config();
 

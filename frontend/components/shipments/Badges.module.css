@@ -1,0 +1,10 @@
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 700; border-radius: 20px;
+  padding: 3px 10px; border: 1px solid; white-space: nowrap;
+}
+.carrier {
+  display: inline-flex; align-items: center;
+  font-size: 12px; font-weight: 700; border-radius: 6px;
+  padding: 2px 9px; border: 1px solid; white-space: nowrap;
+}
