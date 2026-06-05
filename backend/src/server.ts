@@ -7,6 +7,8 @@ import authRouter from './routes/auth';
 import usersRouter from './routes/users';
 import productsRouter from './routes/products';
 import inventoryRouter from './routes/inventoryRoutes';
+import customersRouter from './routes/customers';
+import ordersRouter from './routes/ordersRoutes';
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -19,6 +21,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/inventory', inventoryRouter);
+app.use('/api/customers', customersRouter);
+app.use('/api/orders', ordersRouter);
 
 app.listen(PORT, () => {
   console.log(`ToyShop WMS backend running on http://localhost:${PORT}`);

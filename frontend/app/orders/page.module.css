@@ -1,0 +1,57 @@
+.root{display:flex;min-height:100vh;background:#f1f5f9;}
+.main{margin-left:var(--nav-width,220px);flex:1;transition:margin-left .25s;display:flex;flex-direction:column;}
+.content{padding:22px 28px 32px;flex:1;display:flex;flex-direction:column;gap:16px;}
+
+/* Filter bar */
+.filterBar{background:#fff;border-radius:14px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.04);}
+.filterLeft{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filterLabel{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.relChips{display:flex;gap:5px;flex-wrap:wrap;}
+.relChip{background:#f8fafc;border:1px solid #e2e8f0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;transition:all .15s;}
+.relChip:hover{border-color:#93c5fd;color:#1d4ed8;background:#eff6ff;}
+.relChipActive{background:#1d4ed8!important;color:#fff!important;border-color:#1d4ed8!important;}
+.filterRight{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.filterSelect{width:90px!important;}
+.dateRange{font-size:11px;color:#94a3b8;font-family:monospace;white-space:nowrap;}
+
+/* KPI */
+.kpiRow{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+.kpiCard{background:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.04);cursor:pointer;transition:all .18s;text-align:left;}
+.kpiCard:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.kpiIcon{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.kpiValue{font-size:20px;font-weight:800;line-height:1;}
+.kpiLabel{font-size:11px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.4px;margin-top:3px;}
+
+/* Strip */
+.strip{background:linear-gradient(135deg,#0a0f1e,#1e3a5f);border-radius:12px;padding:11px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.stripTitle{font-size:11px;font-weight:700;color:rgba(148,163,184,.8);text-transform:uppercase;letter-spacing:.5px;}
+.stripStat{font-size:13px;color:rgba(203,213,225,.9);}
+.stripDot{color:rgba(148,163,184,.4);font-size:16px;}
+.stripBtn{margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:rgba(203,213,225,.85);font-size:12px;font-weight:600;padding:5px 14px;cursor:pointer;}
+.stripBtn:hover{background:rgba(255,255,255,.15);color:#fff;}
+
+/* Charts */
+.chartsRow{display:grid;grid-template-columns:1.7fr 1fr;gap:14px;}
+.chartCard,.pieCard{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.04);}
+.chartHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.chartTitle{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:12px;}
+.trendToggle{display:flex;gap:4px;}
+.toggleBtn{background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:#475569;cursor:pointer;}
+.toggleActive{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+
+/* Recent */
+.recentCard{background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.04);}
+.recentHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.viewAll{background:none;border:none;color:#1d4ed8;font-size:12px;font-weight:600;cursor:pointer;}
+.recentTable{display:flex;flex-direction:column;}
+.recentThead,.recentRow{display:grid;grid-template-columns:100px 180px 60px 90px 120px 90px 70px;gap:8px;padding:8px 6px;font-size:12px;}
+.recentThead{color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #f1f5f9;}
+.recentRow{align-items:center;cursor:pointer;border-bottom:1px solid #f8fafc;border-radius:8px;}
+.recentRow:hover{background:#f8fafc;}
+.orderNum{font-family:monospace;font-size:12px;font-weight:700;color:#1d4ed8;}
+.custName{font-size:12px;font-weight:600;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.custCity{font-weight:400;color:#94a3b8;}
+.itemCnt{color:#64748b;}
+.total{font-weight:700;color:#059669;}
+.when{color:#94a3b8;font-size:11px;}
+.empty{text-align:center;padding:24px;color:#94a3b8;font-size:13px;}

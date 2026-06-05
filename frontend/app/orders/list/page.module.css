@@ -1,0 +1,27 @@
+.root{display:flex;min-height:100vh;background:#f1f5f9;}
+.main{margin-left:var(--nav-width,220px);flex:1;transition:margin-left .25s;display:flex;flex-direction:column;}
+.content{padding:22px 28px 32px;flex:1;display:flex;flex-direction:column;gap:14px;}
+.header{display:flex;justify-content:space-between;align-items:flex-start;}
+.pageTitle{font-size:20px;font-weight:800;color:#0f172a;}
+.pageSub{font-size:13px;color:#64748b;margin-top:2px;}
+.addBtn{background:linear-gradient(135deg,#1e3a8a,#1d4ed8)!important;border:none!important;font-weight:600!important;height:40px!important;border-radius:10px!important;}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.chip:hover{border-color:#93c5fd;color:#1d4ed8;}
+.chipActive{font-weight:700;}
+.filterRow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.priorityChips{display:flex;gap:6px;}
+.pChip{background:#fff;border:1px solid #e2e8f0;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;transition:all .15s;}
+.pChipActive{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
+.searchWrap{display:flex;gap:8px;}
+.search{width:260px;border-radius:10px!important;}
+.tableWrap{background:#fff;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.04);overflow:hidden;}
+.orderLink{background:none;border:none;color:#1d4ed8;font-weight:700;font-size:12px;font-family:monospace;cursor:pointer;padding:0;}
+.orderLink:hover{text-decoration:underline;}
+.custName{font-size:13px;font-weight:600;color:#1e293b;}
+.custCity{font-size:11px;color:#94a3b8;}
+.itemCnt{color:#64748b;font-size:13px;}
+.total{font-weight:700;color:#059669;font-size:13px;}
+.assigned{font-size:12px;color:#475569;}
+.when{font-size:11px;color:#94a3b8;}
+.cancelledRow{opacity:.55;}

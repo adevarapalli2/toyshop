@@ -1,0 +1,54 @@
+.root{display:flex;min-height:100vh;background:#f1f5f9;}
+.main{margin-left:var(--nav-width,220px);flex:1;transition:margin-left .25s;display:flex;flex-direction:column;}
+.content{padding:20px 28px 32px;flex:1;display:flex;flex-direction:column;gap:16px;}
+.loading{padding:60px;text-align:center;color:#64748b;}
+
+.pageHeader{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.backBtn{background:none;border:1px solid #e2e8f0;border-radius:8px;padding:6px 14px;font-size:13px;color:#64748b;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.backBtn:hover{border-color:#93c5fd;color:#1d4ed8;}
+.headerInfo{display:flex;align-items:center;gap:10px;}
+.orderNum{font-size:20px;font-weight:800;color:#0f172a;margin:0;font-family:monospace;}
+.headerMeta{margin-left:auto;display:flex;gap:12px;font-size:12px;color:#64748b;}
+
+.layout{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;align-items:start;}
+.leftCol{display:flex;flex-direction:column;gap:14px;}
+.rightCol{display:flex;flex-direction:column;gap:14px;}
+
+.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.04);}
+.cardTitle{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+/* Items table */
+.itemsTable{display:flex;flex-direction:column;gap:0;}
+.itemThead,.itemRow{display:grid;grid-template-columns:1.8fr 70px 60px 80px 110px 80px 80px;gap:8px;padding:8px 6px;font-size:12px;}
+.itemThead{color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid #f1f5f9;}
+.itemRow{align-items:center;border-bottom:1px solid #f8fafc;}
+.cancelled{opacity:.45;text-decoration:line-through;}
+.sku{font-family:monospace;font-size:11px;font-weight:700;color:#1d4ed8;background:#eff6ff;padding:1px 5px;border-radius:3px;}
+.prodName{font-size:12px;font-weight:600;color:#1e293b;margin-top:2px;}
+.bin{font-size:11px;color:#64748b;font-family:monospace;}
+.qty{font-size:14px;font-weight:700;color:#374151;}
+.picked{font-size:12px;font-weight:600;color:#374151;}
+.price{font-size:13px;color:#475569;}
+.lineTotal{font-size:13px;font-weight:700;color:#059669;}
+
+/* Totals */
+.totals{margin-top:16px;border-top:2px solid #f1f5f9;padding-top:12px;display:flex;flex-direction:column;gap:6px;}
+.totalRow{display:flex;justify-content:space-between;font-size:13px;color:#475569;}
+.discount{color:#059669;}
+.grandTotal{font-size:16px;font-weight:800;color:#0f172a;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:4px;}
+
+.notes{font-size:13px;color:#475569;line-height:1.6;margin:0;}
+
+/* Action card */
+.actionCard{background:#fff;border-radius:14px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);border:2px solid;}
+.currentStatus{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.statusLabel{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;}
+.completedMsg{text-align:center;padding:12px;font-size:14px;font-weight:700;color:#059669;}
+.deliveredAt{font-size:12px;color:#64748b;font-weight:400;margin-top:4px;}
+
+/* Customer */
+.custInfo{display:flex;flex-direction:column;gap:6px;}
+.custName2{font-size:15px;font-weight:700;color:#0f172a;}
+.custDetail{font-size:13px;color:#475569;display:flex;align-items:center;gap:5px;}
+.walkIn{font-size:13px;color:#94a3b8;font-style:italic;}
+.shipAddr{margin-top:10px;padding-top:10px;border-top:1px solid #f1f5f9;font-size:12px;color:#64748b;line-height:1.5;}
