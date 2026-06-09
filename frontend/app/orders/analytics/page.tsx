@@ -35,6 +35,7 @@ const PIE_COLORS=['#1d4ed8','#d97706','#7c3aed','#0891b2','#059669','#dc2626','#
 export default function OrderAnalyticsPage() {
   const router=useRouter();
   const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [data,setData]=useState<OrderAnalytics|null>(null);
   const [rel,setRel]=useState<RelKey>('90d');
   const [selMonth,setSelMonth]=useState(new Date().getMonth()+1);
@@ -47,10 +48,10 @@ export default function OrderAnalyticsPage() {
     if(!user)return;
     const {from,to}=buildRange(rel,selMonth,selYear);
     setLoading(true);
-    const r=await orderService.analytics({from,to});
+    const r=await orderService.analytics({from,to,warehouse:selectedWarehouse});
     setData(r.data as unknown as OrderAnalytics);
     setLoading(false);
-  },[user,rel,selMonth,selYear]);
+  },[user,rel,selMonth,selYear,selectedWarehouse]);
 
   useEffect(()=>{load();},[load]);
   if(initializing||!user)return null;

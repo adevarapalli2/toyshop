@@ -28,10 +28,11 @@ const VALID_TRANSITIONS: Record<string, string[]> = {
 
 // GET /api/orders/analytics
 router.get('/analytics', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { from, to } = req.query as Record<string, string>;
+  const { from, to, warehouse = 'Ganga' } = req.query as Record<string, string>;
   const dateFrom = from ? new Date(from) : new Date(Date.now() - 90 * 86400000);
   const dateTo   = to   ? new Date(to)   : new Date();
   dateTo.setHours(23, 59, 59, 999);
+  const wh = warehouse;
 
   // Previous period for comparison
   const diffMs = dateTo.getTime() - dateFrom.getTime();
@@ -39,8 +40,8 @@ router.get('/analytics', async (req: AuthRequest, res: Response): Promise<void> 
   const prevTo   = new Date(dateFrom.getTime() - 1);
 
   try {
-    const periodFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
-    const prevFilter   = and(gte(orders.createdAt, prevFrom), lte(orders.createdAt, prevTo));
+    const periodFilter = and(eq(orders.warehouse, wh), gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const prevFilter   = and(eq(orders.warehouse, wh), gte(orders.createdAt, prevFrom), lte(orders.createdAt, prevTo));
 
     // KPIs
     const allOrders = await db.select({
@@ -136,10 +137,11 @@ router.get('/analytics', async (req: AuthRequest, res: Response): Promise<void> 
 
 // GET /api/orders
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { status, priority, search, from, to, page = '1', limit: lim = '20' } = req.query as Record<string, string>;
+  const { status, priority, search, from, to, page = '1', limit: lim = '20', warehouse = 'Ganga' } = req.query as Record<string, string>;
   const offset = (parseInt(page) - 1) * parseInt(lim);
   const dateFrom = from ? new Date(from) : undefined;
   const dateTo   = to   ? (() => { const d = new Date(to); d.setHours(23,59,59,999); return d; })() : undefined;
+  const wh = warehouse;
 
   try {
     // handle in_progress as multiple statuses
@@ -159,6 +161,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
       .leftJoin(customers, eq(customers.id, orders.customerId))
       .leftJoin(users, eq(users.id, orders.assignedTo))
       .where(and(
+        eq(orders.warehouse, wh),
         statusFilter,
         priority ? eq(orders.priority, priority) : undefined,
         dateFrom ? gte(orders.createdAt, dateFrom) : undefined,
@@ -184,16 +187,16 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // POST /api/orders
 router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
-  const { customerId, priority, notes, shippingAddress, estimatedDelivery, items } = req.body;
+  const { customerId, priority, notes, shippingAddress, estimatedDelivery, items, warehouse = 'Ganga' } = req.body;
   if (!items?.length) { res.status(422).json({ success: false, message: 'Order must have at least one item' }); return; }
 
   try {
-    // Validate stock
+    // Validate stock for the selected warehouse
     for (const item of items) {
-      const [inv] = await db.select().from(inventory).where(eq(inventory.productId, item.productId));
+      const [inv] = await db.select().from(inventory).where(and(eq(inventory.productId, item.productId), eq(inventory.warehouse, warehouse)));
       if (!inv || inv.quantity - inv.reservedQty < item.quantity) {
         const [prod] = await db.select({ name: products.name }).from(products).where(eq(products.id, item.productId));
-        res.status(422).json({ success: false, message: `Insufficient stock for ${prod?.name ?? 'product'}` });
+        res.status(422).json({ success: false, message: `Insufficient stock for ${prod?.name ?? 'product'} in ${warehouse}` });
         return;
       }
     }
@@ -217,6 +220,7 @@ router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promis
     // Atomic: order + items + reserved qty + timeline
     const [order] = await db.insert(orders).values({
       orderNumber, customerId: customerId || null,
+      warehouse: warehouse || 'Ganga',
       status: 'pending', priority: priority || 'normal',
       subtotal: subtotal.toFixed(2), taxAmount: tax.toFixed(2), totalAmount: total.toFixed(2),
       shippingAddress, notes,
@@ -286,7 +290,7 @@ router.put('/:id/status', managerOrAdmin, async (req: AuthRequest, res: Response
   if (!status) { res.status(422).json({ success: false, message: 'Status required' }); return; }
 
   try {
-    const [order] = await db.select({ status: orders.status }).from(orders).where(eq(orders.id, id));
+    const [order] = await db.select({ status: orders.status, warehouse: orders.warehouse }).from(orders).where(eq(orders.id, id));
     if (!order) { res.status(404).json({ success: false, message: 'Order not found' }); return; }
 
     const allowed = VALID_TRANSITIONS[order.status] ?? [];
@@ -305,19 +309,19 @@ router.put('/:id/status', managerOrAdmin, async (req: AuthRequest, res: Response
     const [ord] = await db.select({ orderNumber: orders.orderNumber }).from(orders).where(eq(orders.id, id));
 
     if (status === 'confirmed') {
-      // Deduct actual stock, clear reservedQty
+      // Deduct actual stock, clear reservedQty — scoped to this order's warehouse
       for (const item of items) {
-        const [inv] = await db.select().from(inventory).where(eq(inventory.productId, item.productId));
+        const [inv] = await db.select().from(inventory).where(and(eq(inventory.productId, item.productId), eq(inventory.warehouse, order.warehouse)));
         if (inv) {
           const newQty = Math.max(0, inv.quantity - item.quantity);
-          await db.update(inventory).set({ quantity: newQty, reservedQty: Math.max(0, inv.reservedQty - item.quantity), updatedAt: new Date() }).where(eq(inventory.productId, item.productId));
-          await db.insert(stockMovements).values({ productId: item.productId, movementType: 'OUT', quantity: item.quantity, quantityBefore: inv.quantity, quantityAfter: newQty, referenceNo: ord.orderNumber, notes: 'Order confirmed', performedBy: req.user!.id });
+          await db.update(inventory).set({ quantity: newQty, reservedQty: Math.max(0, inv.reservedQty - item.quantity), updatedAt: new Date() }).where(and(eq(inventory.productId, item.productId), eq(inventory.warehouse, order.warehouse)));
+          await db.insert(stockMovements).values({ productId: item.productId, warehouse: order.warehouse, movementType: 'OUT', quantity: item.quantity, quantityBefore: inv.quantity, quantityAfter: newQty, referenceNo: ord.orderNumber, notes: 'Order confirmed', performedBy: req.user!.id });
         }
       }
     } else if (status === 'cancelled') {
       // Restore reserved qty
       for (const item of items) {
-        await db.update(inventory).set({ reservedQty: sql`greatest(0, reserved_qty - ${item.quantity})`, updatedAt: new Date() }).where(eq(inventory.productId, item.productId));
+        await db.update(inventory).set({ reservedQty: sql`greatest(0, reserved_qty - ${item.quantity})`, updatedAt: new Date() }).where(and(eq(inventory.productId, item.productId), eq(inventory.warehouse, order.warehouse)));
       }
       await db.update(orderItems).set({ status: 'cancelled' }).where(eq(orderItems.orderId, id));
     }

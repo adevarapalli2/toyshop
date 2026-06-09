@@ -19,6 +19,7 @@ function ShipmentsList() {
   const router=useRouter();
   const params=useSearchParams();
   const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [rows,setRows]=useState<ShipmentRow[]>([]);
   const [loading,setLoading]=useState(false);
   const [search,setSearch]=useState('');
@@ -30,11 +31,11 @@ function ShipmentsList() {
   const load=useCallback(async()=>{
     setLoading(true);
     try{
-      const r=await shipmentService.list({status:statusFilter||undefined,carrier:carrierFilter||undefined,search:search||undefined});
+      const r=await shipmentService.list({status:statusFilter||undefined,carrier:carrierFilter||undefined,search:search||undefined,warehouse:selectedWarehouse});
       setRows(r.data.data??[]);
     }catch{message.error('Failed to load shipments');}
     finally{setLoading(false);}
-  },[search,statusFilter,carrierFilter]);
+  },[search,statusFilter,carrierFilter,selectedWarehouse]);
 
   useEffect(()=>{if(user)load();},[load,user]);
 

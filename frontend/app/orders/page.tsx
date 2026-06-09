@@ -38,6 +38,7 @@ const timeSince=(d:string)=>{const s=Math.floor((Date.now()-new Date(d).getTime(
 export default function OrdersDashboard() {
   const router = useRouter();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
+  const selectedWarehouse = useSelector((s: RootState) => s.warehouse.selected);
   const [analytics, setAnalytics] = useState<OrderAnalytics|null>(null);
   const [recent, setRecent] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +54,13 @@ export default function OrdersDashboard() {
     const {from,to}=buildRange(rel,selMonth,selYear);
     setLoading(true);
     const [aRes,oRes] = await Promise.allSettled([
-      orderService.analytics({from,to}),
-      orderService.list({from,to,page:1}),
+      orderService.analytics({from,to,warehouse:selectedWarehouse}),
+      orderService.list({from,to,page:1,warehouse:selectedWarehouse}),
     ]);
     if(aRes.status==='fulfilled') setAnalytics(aRes.value.data as unknown as OrderAnalytics);
     if(oRes.status==='fulfilled') setRecent((oRes.value.data.data??[]).slice(0,10));
     setLoading(false);
-  },[user,rel,selMonth,selYear]);
+  },[user,rel,selMonth,selYear,selectedWarehouse]);
 
   useEffect(()=>{ load(); },[load]);
 

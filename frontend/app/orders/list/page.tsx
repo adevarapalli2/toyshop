@@ -25,6 +25,7 @@ function OrdersList() {
   const router = useRouter();
   const params = useSearchParams();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
+  const selectedWarehouse = useSelector((s: RootState) => s.warehouse.selected);
   const [rows, setRows] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -36,11 +37,11 @@ function OrdersList() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await orderService.list({ status:statusFilter||undefined, priority:priorityFilter||undefined, search:search||undefined });
+      const r = await orderService.list({ status:statusFilter||undefined, priority:priorityFilter||undefined, search:search||undefined, warehouse:selectedWarehouse });
       setRows(r.data.data ?? []);
     } catch { message.error('Failed to load orders'); }
     finally { setLoading(false); }
-  }, [search, statusFilter, priorityFilter]);
+  }, [search, statusFilter, priorityFilter, selectedWarehouse]);
 
   useEffect(()=>{ if(user)load(); },[load,user]);
 

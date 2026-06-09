@@ -66,7 +66,7 @@ export const CARRIERS: string[] = ['FedEx','DHL','UPS','BlueDart','Delhivery','D
 export const STATUSES: ShipStatus[] = ['pending_pickup','picked_up','in_transit','out_for_delivery','delivered','failed_delivery','returned'];
 
 export const shipmentService = {
-  list: (p?:{status?:string;carrier?:string;search?:string;from?:string;to?:string}) =>
+  list: (p?:{status?:string;carrier?:string;search?:string;from?:string;to?:string;warehouse?:string}) =>
     api.get<{success:boolean;data:ShipmentRow[]}>('/api/shipments',{params:p}),
   getById: (id:number) =>
     api.get<{success:boolean;shipment:ShipmentDetail;events:ShipmentEvent[];items:ShipmentItem[]}>(`/api/shipments/${id}`),
@@ -76,6 +76,6 @@ export const shipmentService = {
     api.put(`/api/shipments/${id}/status`,{status,location,notes}),
   addEvent: (id:number, body:{eventType:string;location?:string;description:string}) =>
     api.post(`/api/shipments/${id}/events`,body),
-  analytics: (p?:{from?:string;to?:string}) =>
+  analytics: (p?:{from?:string;to?:string;warehouse?:string}) =>
     api.get<{success:boolean}&ShipmentAnalytics>('/api/shipments/analytics',{params:p}),
 };

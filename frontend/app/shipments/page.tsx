@@ -33,6 +33,7 @@ const daysLeft=(d:string|null)=>{if(!d)return null;const diff=Math.ceil((new Dat
 export default function ShipmentsDashboard() {
   const router=useRouter();
   const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [analytics,setAnalytics]=useState<ShipmentAnalytics|null>(null);
   const [recent,setRecent]=useState<ShipmentRow[]>([]);
   const [loading,setLoading]=useState(true);
@@ -47,13 +48,13 @@ export default function ShipmentsDashboard() {
     const {from,to}=buildRange(rel,selMo,selYr);
     setLoading(true);
     const [aRes,lRes]=await Promise.allSettled([
-      shipmentService.analytics({from,to}),
-      shipmentService.list({from,to}),
+      shipmentService.analytics({from,to,warehouse:selectedWarehouse}),
+      shipmentService.list({from,to,warehouse:selectedWarehouse}),
     ]);
     if(aRes.status==='fulfilled')setAnalytics(aRes.value.data as unknown as ShipmentAnalytics);
     if(lRes.status==='fulfilled')setRecent((lRes.value.data.data??[]).slice(0,10));
     setLoading(false);
-  },[user,rel,selMo,selYr]);
+  },[user,rel,selMo,selYr,selectedWarehouse]);
 
   useEffect(()=>{load();},[load]);
   if(initializing||!user)return null;

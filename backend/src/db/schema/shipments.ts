@@ -25,6 +25,7 @@ export const shipments = pgTable('shipments', {
   actualDelivery: timestamp('actual_delivery'),
   shippedAt: timestamp('shipped_at'),
   notes: text('notes'),
+  warehouse: varchar('warehouse', { length: 50 }).notNull().default('Ganga'),
   createdBy: integer('created_by').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

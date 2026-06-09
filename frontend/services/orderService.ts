@@ -54,7 +54,7 @@ export const customerService = {
 };
 
 export const orderService = {
-  list: (p?:{status?:string;priority?:string;search?:string;from?:string;to?:string;page?:number}) =>
+  list: (p?:{status?:string;priority?:string;search?:string;from?:string;to?:string;page?:number;warehouse?:string}) =>
     api.get<{success:boolean;data:OrderRow[]}>('/api/orders',{params:p}),
   getById: (id:number) =>
     api.get<{success:boolean;order:OrderDetail;items:OrderItem[];timeline:TimelineEvent[]}>(`/api/orders/${id}`),
@@ -62,5 +62,5 @@ export const orderService = {
   updateStatus: (id:number, status:string, notes?:string) => api.put(`/api/orders/${id}/status`,{status,notes}),
   update: (id:number, body:Record<string,unknown>) => api.put(`/api/orders/${id}`,body),
   cancel: (id:number) => api.delete(`/api/orders/${id}`),
-  analytics: (p?:{from?:string;to?:string}) => api.get<{success:boolean}&OrderAnalytics>('/api/orders/analytics',{params:p}),
+  analytics: (p?:{from?:string;to?:string;warehouse?:string}) => api.get<{success:boolean}&OrderAnalytics>('/api/orders/analytics',{params:p}),
 };

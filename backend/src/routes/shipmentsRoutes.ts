@@ -36,17 +36,18 @@ const EVENT_FOR_STATUS: Record<string, { eventType: string; description: string 
 
 // GET /api/shipments/analytics
 router.get('/analytics', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { from, to } = req.query as Record<string, string>;
+  const { from, to, warehouse = 'Ganga' } = req.query as Record<string, string>;
   const dateFrom = from ? new Date(from) : new Date(Date.now() - 90 * 86400000);
   const dateTo   = to   ? new Date(to)   : new Date();
   dateTo.setHours(23, 59, 59, 999);
+  const wh = warehouse;
 
   try {
     const allShipments = await db.select({
       status: shipments.status, carrier: shipments.carrier,
       shippingCost: shipments.shippingCost, estimatedDelivery: shipments.estimatedDelivery,
       actualDelivery: shipments.actualDelivery, shippedAt: shipments.shippedAt, createdAt: shipments.createdAt,
-    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo)));
+    }).from(shipments).where(and(eq(shipments.warehouse, wh), gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo)));
 
     const today = new Date(); today.setHours(0,0,0,0);
     const total = allShipments.length;
@@ -116,9 +117,10 @@ router.get('/analytics', async (req: AuthRequest, res: Response): Promise<void> 
 
 // GET /api/shipments
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { status, carrier, search, from, to } = req.query as Record<string, string>;
+  const { status, carrier, search, from, to, warehouse = 'Ganga' } = req.query as Record<string, string>;
   const dateFrom = from ? new Date(from) : undefined;
   const dateTo   = to   ? (() => { const d = new Date(to); d.setHours(23,59,59,999); return d; })() : undefined;
+  const wh = warehouse;
 
   try {
     const rows = await db.select({
@@ -133,6 +135,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
     .innerJoin(orders, eq(orders.id, shipments.orderId))
     .leftJoin(customers, eq(customers.id, shipments.customerId))
     .where(and(
+      eq(shipments.warehouse, wh),
       status ? eq(shipments.status, status) : undefined,
       carrier ? eq(shipments.carrier, carrier) : undefined,
       dateFrom ? gte(shipments.createdAt, dateFrom) : undefined,
@@ -153,7 +156,7 @@ router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promis
   if (!orderId || !carrier) { res.status(422).json({ success: false, message: 'orderId and carrier required' }); return; }
 
   try {
-    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    const [order] = await db.select({ id: orders.id, status: orders.status, customerId: orders.customerId, shippingAddress: orders.shippingAddress, warehouse: orders.warehouse }).from(orders).where(eq(orders.id, orderId));
     if (!order) { res.status(404).json({ success: false, message: 'Order not found' }); return; }
     if (!['packed','shipped'].includes(order.status)) {
       res.status(422).json({ success: false, message: 'Order must be in packed status to create shipment' }); return;
@@ -164,6 +167,7 @@ router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promis
 
     const [ship] = await db.insert(shipments).values({
       shipmentNumber, orderId, customerId: order.customerId ?? null,
+      warehouse: order.warehouse || 'Ganga',
       carrier, serviceType: serviceType || 'standard', trackingNumber: trackingNumber || null,
       status: 'pending_pickup',
       originAddress: 'ToyShop Warehouse, Andheri East, Mumbai - 400069',
