@@ -7,7 +7,7 @@ import { inventoryService, MovementType, ProductRow } from '@/services/inventory
 import styles from './Modal.module.css';
 
 interface Props {
-  product: ProductRow | null; open: boolean;
+  product: ProductRow | null; open: boolean; warehouse: string;
   onClose: () => void; onSuccess: () => void;
 }
 
@@ -16,7 +16,7 @@ const typeColors: Record<string, string> = {
   RETURN: '#8b5cf6', TRANSFER: '#f97316',
 };
 
-export default function StockAdjustModal({ product, open, onClose, onSuccess }: Props) {
+export default function StockAdjustModal({ product, open, warehouse, onClose, onSuccess }: Props) {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,7 @@ export default function StockAdjustModal({ product, open, onClose, onSuccess }: 
     if (!product) return;
     setLoading(true);
     try {
-      const res = await inventoryService.adjust({ productId: product.id, ...v });
+      const res = await inventoryService.adjust({ productId: product.id, warehouse, ...v });
       message.success(`Stock updated: ${res.data.quantityBefore} → ${res.data.quantityAfter}`);
       form.resetFields();
       onSuccess();

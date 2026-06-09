@@ -13,11 +13,11 @@ router.use(authenticate);
 
 // GET /api/inventory/overview
 router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { from, to } = req.query as { from?: string; to?: string };
+  const { from, to, warehouse = 'Ganga' } = req.query as { from?: string; to?: string; warehouse?: string };
   const dateFrom = from ? new Date(from) : null;
   const dateTo = to ? new Date(to) : null;
-  // extend dateTo to end of day
   if (dateTo) dateTo.setHours(23, 59, 59, 999);
+  const wh = warehouse;
   try {
     const allRows = await db
       .select({
@@ -27,7 +27,7 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
       })
       .from(inventory)
       .innerJoin(products, eq(products.id, inventory.productId))
-      .where(eq(products.isActive, true));
+      .where(and(eq(products.isActive, true), eq(inventory.warehouse, wh)));
 
     const kpi = allRows.reduce((acc, r) => {
       const qty = r.quantity ?? 0;
@@ -40,7 +40,6 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
       return acc;
     }, { totalSkus: 0, inStock: 0, lowStock: 0, outOfStock: 0, overstock: 0, totalValue: 0 });
 
-    // Category breakdown
     const catMap: Record<string, { inStock: number; lowStock: number; outOfStock: number }> = {};
     for (const r of allRows) {
       const cat = r.category;
@@ -52,7 +51,6 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
     }
     const categoryChart = Object.entries(catMap).map(([cat, v]) => ({ category: cat, ...v }));
 
-    // Top alerts (low + OOS)
     const alerts = await db
       .select({
         id: products.id, sku: products.sku, name: products.name, category: products.category,
@@ -62,13 +60,14 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
       .innerJoin(products, eq(products.id, inventory.productId))
       .where(and(
         eq(products.isActive, true),
+        eq(inventory.warehouse, wh),
         sql`${inventory.quantity} <= ${inventory.minStock}`,
       ))
       .orderBy(inventory.quantity)
       .limit(8);
 
-    // Recent movements — filtered by date range if provided
     const movDateFilter = and(
+      eq(stockMovements.warehouse, wh),
       dateFrom ? gte(stockMovements.createdAt, dateFrom) : undefined,
       dateTo   ? lte(stockMovements.createdAt, dateTo)   : undefined,
     );
@@ -90,7 +89,6 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
       .orderBy(desc(stockMovements.createdAt))
       .limit(15);
 
-    // Period movement summary
     const [periodSummary] = await db
       .select({
         totalIn:  sql<number>`coalesce(sum(case when movement_type='IN' then quantity else 0 end),0)`,
@@ -107,8 +105,9 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
 
 // GET /api/inventory/movements
 router.get('/movements', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { search, type, page = '1', limit: lim = '20' } = req.query as Record<string, string>;
+  const { search, type, page = '1', limit: lim = '20', warehouse = 'Ganga' } = req.query as Record<string, string>;
   const offset = (parseInt(page) - 1) * parseInt(lim);
+  const wh = warehouse;
   try {
     const rows = await db
       .select({
@@ -123,6 +122,7 @@ router.get('/movements', async (req: AuthRequest, res: Response): Promise<void> 
       .innerJoin(products, eq(products.id, stockMovements.productId))
       .leftJoin(users, eq(users.id, stockMovements.performedBy))
       .where(and(
+        eq(stockMovements.warehouse, wh),
         search ? ilike(products.name, `%${search}%`) : undefined,
         type ? eq(stockMovements.movementType, type) : undefined,
       ))
@@ -135,7 +135,9 @@ router.get('/movements', async (req: AuthRequest, res: Response): Promise<void> 
 });
 
 // GET /api/inventory/alerts
-router.get('/alerts', async (_req: AuthRequest, res: Response): Promise<void> => {
+router.get('/alerts', async (req: AuthRequest, res: Response): Promise<void> => {
+  const { warehouse = 'Ganga' } = req.query as { warehouse?: string };
+  const wh = warehouse;
   try {
     const rows = await db
       .select({
@@ -147,6 +149,7 @@ router.get('/alerts', async (_req: AuthRequest, res: Response): Promise<void> =>
       .innerJoin(products, eq(products.id, inventory.productId))
       .where(and(
         eq(products.isActive, true),
+        eq(inventory.warehouse, wh),
         sql`${inventory.quantity} <= ${inventory.minStock}`,
       ))
       .orderBy(inventory.quantity);
@@ -159,7 +162,7 @@ router.get('/alerts', async (_req: AuthRequest, res: Response): Promise<void> =>
 
 // POST /api/inventory/adjust
 router.post('/adjust', managerOrAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
-  const { productId, movementType, quantity, referenceNo, notes } = req.body;
+  const { productId, warehouse = 'Ganga', movementType, quantity, referenceNo, notes } = req.body;
   if (!productId || !movementType || !quantity) {
     res.status(422).json({ success: false, message: 'productId, movementType, quantity required' }); return;
   }
@@ -167,17 +170,20 @@ router.post('/adjust', managerOrAdmin, async (req: AuthRequest, res: Response): 
   if (!validTypes.includes(movementType)) {
     res.status(422).json({ success: false, message: `movementType must be one of ${validTypes.join(', ')}` }); return;
   }
+  const wh = warehouse;
   try {
-    const [inv] = await db.select().from(inventory).where(eq(inventory.productId, productId));
-    if (!inv) { res.status(404).json({ success: false, message: 'Product inventory not found' }); return; }
+    const [inv] = await db.select().from(inventory)
+      .where(and(eq(inventory.productId, productId), eq(inventory.warehouse, wh)));
+    if (!inv) { res.status(404).json({ success: false, message: 'Product inventory not found for this warehouse' }); return; }
 
     const before = inv.quantity;
     const qty = Math.abs(parseInt(quantity));
     const after = ['OUT'].includes(movementType) ? Math.max(0, before - qty) : before + qty;
 
-    await db.update(inventory).set({ quantity: after, updatedAt: new Date() }).where(eq(inventory.productId, productId));
+    await db.update(inventory).set({ quantity: after, updatedAt: new Date() })
+      .where(and(eq(inventory.productId, productId), eq(inventory.warehouse, wh)));
     await db.insert(stockMovements).values({
-      productId, movementType, quantity: qty,
+      productId, warehouse: wh, movementType, quantity: qty,
       quantityBefore: before, quantityAfter: after,
       referenceNo: referenceNo || null, notes: notes || null,
       performedBy: req.user!.id,

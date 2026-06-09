@@ -5,6 +5,7 @@ import { users } from './users';
 export const stockMovements = pgTable('stock_movements', {
   id: serial('id').primaryKey(),
   productId: integer('product_id').notNull().references(() => products.id),
+  warehouse: varchar('warehouse', { length: 50 }).notNull().default('Ganga'),
   movementType: varchar('movement_type', { length: 20 }).notNull(),
   quantity: integer('quantity').notNull(),
   quantityBefore: integer('quantity_before').notNull(),

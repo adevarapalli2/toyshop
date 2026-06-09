@@ -66,6 +66,7 @@ function buildDateRange(rel: RelativeKey, month: number, year: number): { from: 
 export default function InventoryOverview() {
   const router = useRouter();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
+  const selectedWarehouse = useSelector((s: RootState) => s.warehouse.selected);
 
   const [kpi, setKpi] = useState<InventoryKpi | null>(null);
   const [chart, setChart] = useState<{ category: string; inStock: number; lowStock: number; outOfStock: number }[]>([]);
@@ -86,14 +87,14 @@ export default function InventoryOverview() {
     setLoading(true);
     const { from, to } = buildDateRange(relative, selMonth, selYear);
     try {
-      const r = await inventoryService.overview({ from, to });
+      const r = await inventoryService.overview({ from, to, warehouse: selectedWarehouse });
       setKpi(r.data.kpi);
       setChart(r.data.categoryChart.map(c => ({ ...c, category: catLabel(c.category) })));
       setAlerts(r.data.alerts);
       setRecent(r.data.recentMovements);
       setPeriodSummary(r.data.periodSummary ?? null);
     } finally { setLoading(false); }
-  }, [user, relative, selMonth, selYear]);
+  }, [user, relative, selMonth, selYear, selectedWarehouse]);
 
   useEffect(() => { load(); }, [load]);
 

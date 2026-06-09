@@ -20,6 +20,7 @@ const catColor: Record<string, string> = {
 export default function AlertsPage() {
   const router = useRouter();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
+  const selectedWarehouse = useSelector((s: RootState) => s.warehouse.selected);
   const [outOfStock, setOutOfStock] = useState<AlertRow[]>([]);
   const [lowStock, setLowStock] = useState<AlertRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,14 +31,14 @@ export default function AlertsPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const r = await inventoryService.alerts();
+      const r = await inventoryService.alerts({ warehouse: selectedWarehouse });
       setOutOfStock(r.data.outOfStock);
       setLowStock(r.data.lowStock);
     } catch { message.error('Failed to load alerts'); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { if (user) load(); }, [user]); // eslint-disable-line
+  useEffect(() => { if (user) load(); }, [user, selectedWarehouse]); // eslint-disable-line
 
   const allClear = !loading && outOfStock.length === 0 && lowStock.length === 0;
 
@@ -134,7 +135,7 @@ export default function AlertsPage() {
           )}
         </div>
       </main>
-      <StockAdjustModal product={adjustProduct as ProductRow} open={!!adjustProduct} onClose={() => setAdjustProduct(null)} onSuccess={() => { setAdjustProduct(null); load(); }} />
+      <StockAdjustModal product={adjustProduct as ProductRow} warehouse={selectedWarehouse} open={!!adjustProduct} onClose={() => setAdjustProduct(null)} onSuccess={() => { setAdjustProduct(null); load(); }} />
     </div>
   );
 }

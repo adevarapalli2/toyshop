@@ -20,7 +20,8 @@ function stockStatus(qty: number, min: number, max: number): string {
 
 // GET /api/products
 router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { search, category, status, stock } = req.query as Record<string, string>;
+  const { search, category, status, stock, warehouse = 'Ganga' } = req.query as Record<string, string>;
+  const wh = warehouse;
   try {
     const rows = await db
       .select({
@@ -34,7 +35,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
         updatedAt: inventory.updatedAt,
       })
       .from(products)
-      .leftJoin(inventory, eq(inventory.productId, products.id))
+      .leftJoin(inventory, and(eq(inventory.productId, products.id), eq(inventory.warehouse, wh)))
       .where(and(
         search ? or(ilike(products.name, `%${search}%`), ilike(products.sku, `%${search}%`)) : undefined,
         category ? eq(products.category, category) : undefined,
@@ -66,10 +67,12 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // POST /api/products
 router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
-  const { sku, name, category, unit, costPrice, sellPrice, description, minStock, maxStock, warehouseZone, binLocation, initialQty } = req.body;
+  const { sku, name, category, unit, costPrice, sellPrice, description, minStock, maxStock,
+          warehouseZone, binLocation, initialQty, warehouse = 'Ganga' } = req.body;
   if (!sku || !name || !category) {
     res.status(422).json({ success: false, message: 'sku, name, category required' }); return;
   }
+  const wh = warehouse;
   try {
     const [existing] = await db.select({ id: products.id }).from(products).where(eq(products.sku, sku.toUpperCase()));
     if (existing) { res.status(422).json({ success: false, message: 'SKU already exists' }); return; }
@@ -81,7 +84,7 @@ router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promis
 
     const qty = parseInt(initialQty) || 0;
     await db.insert(inventory).values({
-      productId: prod.id, quantity: qty,
+      productId: prod.id, warehouse: wh, quantity: qty,
       minStock: parseInt(minStock) || 5,
       maxStock: parseInt(maxStock) || 100,
       warehouseZone: warehouseZone || 'A',
@@ -90,7 +93,7 @@ router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promis
 
     if (qty > 0) {
       await db.insert(stockMovements).values({
-        productId: prod.id, movementType: 'IN',
+        productId: prod.id, warehouse: wh, movementType: 'IN',
         quantity: qty, quantityBefore: 0, quantityAfter: qty,
         referenceNo: 'INITIAL', notes: 'Initial stock', performedBy: req.user!.id,
       });
@@ -103,6 +106,8 @@ router.post('/', managerOrAdmin, async (req: AuthRequest, res: Response): Promis
 // GET /api/products/:id
 router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
   const id = parseInt(String(req.params.id));
+  const { warehouse = 'Ganga' } = req.query as { warehouse?: string };
+  const wh = warehouse;
   try {
     const [prod] = await db
       .select({
@@ -115,7 +120,7 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
         warehouseZone: inventory.warehouseZone, binLocation: inventory.binLocation,
       })
       .from(products)
-      .leftJoin(inventory, eq(inventory.productId, products.id))
+      .leftJoin(inventory, and(eq(inventory.productId, products.id), eq(inventory.warehouse, wh)))
       .where(eq(products.id, id));
 
     if (!prod) { res.status(404).json({ success: false, message: 'Product not found' }); return; }
@@ -130,7 +135,7 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
       })
       .from(stockMovements)
       .leftJoin(users, eq(users.id, stockMovements.performedBy))
-      .where(eq(stockMovements.productId, id))
+      .where(and(eq(stockMovements.productId, id), eq(stockMovements.warehouse, wh)))
       .orderBy(desc(stockMovements.createdAt))
       .limit(20);
 
@@ -141,7 +146,9 @@ router.get('/:id', async (req: AuthRequest, res: Response): Promise<void> => {
 // PUT /api/products/:id
 router.put('/:id', managerOrAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
   const id = parseInt(String(req.params.id));
-  const { name, category, unit, costPrice, sellPrice, description, isActive, minStock, maxStock, warehouseZone, binLocation } = req.body;
+  const { name, category, unit, costPrice, sellPrice, description, isActive,
+          minStock, maxStock, warehouseZone, binLocation, warehouse = 'Ganga' } = req.body;
+  const wh = warehouse;
   try {
     const productUpdates: Partial<typeof products.$inferInsert> = {};
     if (name !== undefined) productUpdates.name = name;
@@ -163,7 +170,8 @@ router.put('/:id', managerOrAdmin, async (req: AuthRequest, res: Response): Prom
     if (binLocation !== undefined) invUpdates.binLocation = binLocation;
 
     if (Object.keys(invUpdates).length > 0) {
-      await db.update(inventory).set(invUpdates).where(eq(inventory.productId, id));
+      await db.update(inventory).set(invUpdates)
+        .where(and(eq(inventory.productId, id), eq(inventory.warehouse, wh)));
     }
 
     res.json({ success: true, message: 'Product updated' });

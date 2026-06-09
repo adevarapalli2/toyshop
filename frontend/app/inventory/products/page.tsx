@@ -28,6 +28,7 @@ function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
+  const selectedWarehouse = useSelector((s: RootState) => s.warehouse.selected);
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -41,11 +42,11 @@ function ProductsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await productService.list({ search: search || undefined, category: category || undefined, stock: stockFilter || undefined });
+      const r = await productService.list({ search: search || undefined, category: category || undefined, stock: stockFilter || undefined, warehouse: selectedWarehouse });
       setRows(r.data.data);
     } catch { message.error('Failed to load products'); }
     finally { setLoading(false); }
-  }, [search, category, stockFilter]);
+  }, [search, category, stockFilter, selectedWarehouse]);
 
   useEffect(() => { if (user) load(); }, [load, user]);
 
@@ -158,8 +159,8 @@ function ProductsPage() {
         </div>
       </main>
 
-      <AddProductModal open={addOpen} onClose={() => setAddOpen(false)} onSuccess={() => { setAddOpen(false); load(); }} />
-      <StockAdjustModal product={adjustProduct} open={!!adjustProduct} onClose={() => setAdjustProduct(null)} onSuccess={() => { setAdjustProduct(null); load(); }} />
+      <AddProductModal open={addOpen} warehouse={selectedWarehouse} onClose={() => setAddOpen(false)} onSuccess={() => { setAddOpen(false); load(); }} />
+      <StockAdjustModal product={adjustProduct} warehouse={selectedWarehouse} open={!!adjustProduct} onClose={() => setAdjustProduct(null)} onSuccess={() => { setAdjustProduct(null); load(); }} />
     </div>
   );
 }

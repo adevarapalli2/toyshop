@@ -32,27 +32,29 @@ export interface AlertRow {
 }
 
 export const productService = {
-  list: (p?: { search?: string; category?: string; status?: string; stock?: string }) =>
+  list: (p?: { search?: string; category?: string; status?: string; stock?: string; warehouse?: string }) =>
     api.get<{ success: boolean; data: ProductRow[]; summary: Record<string, number> }>('/api/products', { params: p }),
-  getById: (id: number) => api.get<{ success: boolean; product: ProductRow & { movements: MovementRow[] } }>(`/api/products/${id}`),
+  getById: (id: number, warehouse?: string) =>
+    api.get<{ success: boolean; product: ProductRow & { movements: MovementRow[] } }>(`/api/products/${id}`, { params: warehouse ? { warehouse } : undefined }),
   create: (body: Record<string, unknown>) => api.post('/api/products', body),
   update: (id: number, body: Record<string, unknown>) => api.put(`/api/products/${id}`, body),
   deactivate: (id: number) => api.delete(`/api/products/${id}`),
 };
 
 export const inventoryService = {
-  overview: (params?: { from?: string; to?: string }) => api.get<{
+  overview: (params?: { from?: string; to?: string; warehouse?: string }) => api.get<{
     success: boolean; kpi: InventoryKpi;
     categoryChart: { category: string; inStock: number; lowStock: number; outOfStock: number }[];
     alerts: AlertRow[]; recentMovements: MovementRow[];
     periodSummary: { totalIn: number; totalOut: number; totalAdj: number; count: number };
   }>('/api/inventory/overview', { params }),
 
-  movements: (p?: { search?: string; type?: string; page?: number; limit?: number }) =>
+  movements: (p?: { search?: string; type?: string; page?: number; limit?: number; warehouse?: string }) =>
     api.get<{ success: boolean; data: MovementRow[] }>('/api/inventory/movements', { params: p }),
 
-  alerts: () => api.get<{ success: boolean; outOfStock: AlertRow[]; lowStock: AlertRow[] }>('/api/inventory/alerts'),
+  alerts: (params?: { warehouse?: string }) =>
+    api.get<{ success: boolean; outOfStock: AlertRow[]; lowStock: AlertRow[] }>('/api/inventory/alerts', { params }),
 
-  adjust: (body: { productId: number; movementType: MovementType; quantity: number; referenceNo?: string; notes?: string }) =>
+  adjust: (body: { productId: number; warehouse: string; movementType: MovementType; quantity: number; referenceNo?: string; notes?: string }) =>
     api.post('/api/inventory/adjust', body),
 };

@@ -25,6 +25,7 @@ const TYPES: MovementType[] = ['IN', 'OUT', 'ADJUSTMENT', 'RETURN', 'TRANSFER'];
 export default function MovementsPage() {
   const router = useRouter();
   const { user, initializing } = useSelector((s: RootState) => s.auth);
+  const selectedWarehouse = useSelector((s: RootState) => s.warehouse.selected);
   const [rows, setRows] = useState<MovementRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -36,11 +37,11 @@ export default function MovementsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const r = await inventoryService.movements({ search: search || undefined, type: typeFilter || undefined, page, limit: 25 });
+      const r = await inventoryService.movements({ search: search || undefined, type: typeFilter || undefined, page, limit: 25, warehouse: selectedWarehouse });
       setRows(r.data.data);
     } catch { message.error('Failed to load movements'); }
     finally { setLoading(false); }
-  }, [search, typeFilter, page]);
+  }, [search, typeFilter, page, selectedWarehouse]);
 
   useEffect(() => { if (user) load(); }, [load, user]);
 
