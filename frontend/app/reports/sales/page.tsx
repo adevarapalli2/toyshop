@@ -28,14 +28,15 @@ const fmt=(n:number)=>`₹${n.toLocaleString('en-IN',{maximumFractionDigits:0})}
 
 export default function SalesReport() {
   const router=useRouter(); const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [data,setData]=useState<SalesData|null>(null); const [loading,setLoading]=useState(true);
   const [downloading,setDownloading]=useState<string|null>(null);
   const [rel,setRel]=useState<RelKey>('90d'); const [selMo,setSelMo]=useState(new Date().getMonth()+1); const [selYr,setSelYr]=useState(CY);
 
   useEffect(()=>{if(!initializing&&!user)router.replace('/login');},[user,initializing,router]);
   const load=useCallback(async()=>{ if(!user)return; const {from,to}=buildRange(rel,selMo,selYr); setLoading(true);
-    const r=await reportService.sales({from,to}); setData(r.data as unknown as SalesData); setLoading(false);
-  },[user,rel,selMo,selYr]);
+    const r=await reportService.sales({from,to,warehouse:selectedWarehouse}); setData(r.data as unknown as SalesData); setLoading(false);
+  },[user,rel,selMo,selYr,selectedWarehouse]);
   useEffect(()=>{load();},[load]);
 
   const dl=async(fn:()=>Promise<void>,key:string)=>{ setDownloading(key); try{await fn();}catch{message.error('Download failed');}finally{setDownloading(null);} };
@@ -51,8 +52,8 @@ export default function SalesReport() {
           <div className={styles.pageHeader}>
             <div><div className={styles.pageTitle}>📊 Sales Report</div><div className={styles.pageSub}>Revenue, orders and product performance analysis</div></div>
             <div className={styles.exportRow}>
-              <button className={`${styles.exportBtn} ${styles.excelBtn}`} disabled={downloading==='excel'} onClick={()=>dl(()=>reportService.downloadSalesExcel(from,to),'excel')}><FileExcelOutlined/> {downloading==='excel'?'Generating…':'Export Excel'}</button>
-              <button className={`${styles.exportBtn} ${styles.pdfBtn}`} disabled={downloading==='pdf'} onClick={()=>dl(()=>reportService.downloadSalesPdf(from,to),'pdf')}><FilePdfOutlined/> {downloading==='pdf'?'Generating…':'Export PDF'}</button>
+              <button className={`${styles.exportBtn} ${styles.excelBtn}`} disabled={downloading==='excel'} onClick={()=>dl(()=>reportService.downloadSalesExcel(from,to,selectedWarehouse),'excel')}><FileExcelOutlined/> {downloading==='excel'?'Generating…':'Export Excel'}</button>
+              <button className={`${styles.exportBtn} ${styles.pdfBtn}`} disabled={downloading==='pdf'} onClick={()=>dl(()=>reportService.downloadSalesPdf(from,to,selectedWarehouse),'pdf')}><FilePdfOutlined/> {downloading==='pdf'?'Generating…':'Export PDF'}</button>
             </div>
           </div>
 

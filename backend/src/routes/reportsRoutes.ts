@@ -19,11 +19,12 @@ router.use(authenticate);
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function parseDates(req: AuthRequest) {
-  const { from, to } = req.query as Record<string, string>;
+  const { from, to, warehouse } = req.query as Record<string, string>;
   const dateFrom = from ? new Date(from) : new Date(Date.now() - 90 * 86400000);
   const dateTo   = to   ? new Date(to)   : new Date();
   dateTo.setHours(23, 59, 59, 999);
-  return { dateFrom, dateTo };
+  const wh = warehouse || 'Ganga';
+  return { dateFrom, dateTo, wh };
 }
 
 function navyStyle(ws: ExcelJS.Worksheet, row: number, cols: number, text: string) {
@@ -114,9 +115,9 @@ function pdfFooter(doc: PDFKit.PDFDocument) {
 
 // ─── GET /api/reports/executive ───────────────────────────────────────────────
 router.get('/executive', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
 
     const allOrders = await db.select({ status: orders.status, totalAmount: orders.totalAmount }).from(orders).where(orderFilter);
     const revenue = allOrders.filter(o => !['cancelled','returned'].includes(o.status)).reduce((s, o) => s + parseFloat(String(o.totalAmount)), 0);
@@ -124,13 +125,14 @@ router.get('/executive', async (req: AuthRequest, res: Response): Promise<void> 
     const fulfillmentRate = allOrders.length > 0 ? parseFloat(((delivered / allOrders.length) * 100).toFixed(1)) : 0;
 
     const invRows = await db.select({ quantity: inventory.quantity, costPrice: products.costPrice, isActive: products.isActive, minStock: inventory.minStock })
-      .from(inventory).innerJoin(products, eq(products.id, inventory.productId)).where(eq(products.isActive, true));
+      .from(inventory).innerJoin(products, eq(products.id, inventory.productId))
+      .where(and(eq(products.isActive, true), eq(inventory.warehouse, wh)));
     const totalSkus = invRows.length;
     const inventoryValue = invRows.reduce((s, r) => s + (r.quantity ?? 0) * parseFloat(String(r.costPrice)), 0);
     const lowStockCount = invRows.filter(r => (r.quantity ?? 0) <= (r.minStock ?? 5)).length;
 
     const allShipments = await db.select({ status: shipments.status, estimatedDelivery: shipments.estimatedDelivery, actualDelivery: shipments.actualDelivery })
-      .from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo)));
+      .from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo), eq(shipments.warehouse, wh)));
     const deliveredShips = allShipments.filter(s => s.status === 'delivered' && s.estimatedDelivery && s.actualDelivery);
     const onTime = deliveredShips.filter(s => new Date(s.actualDelivery!) <= new Date(s.estimatedDelivery!)).length;
     const onTimeRate = deliveredShips.length > 0 ? parseFloat(((onTime / deliveredShips.length) * 100).toFixed(1)) : 0;
@@ -175,9 +177,9 @@ router.get('/executive', async (req: AuthRequest, res: Response): Promise<void> 
 
 // ─── GET /api/reports/sales ───────────────────────────────────────────────────
 router.get('/sales', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
     const activeFilter = and(orderFilter, sql`${orders.status} NOT IN ('cancelled','returned')`);
 
     // KPIs
@@ -255,7 +257,7 @@ router.get('/sales', async (req: AuthRequest, res: Response): Promise<void> => {
 
 // ─── GET /api/reports/inventory ───────────────────────────────────────────────
 router.get('/inventory', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     // Stock valuation
     const allInv = await db.select({
@@ -263,7 +265,7 @@ router.get('/inventory', async (req: AuthRequest, res: Response): Promise<void> 
       quantity: inventory.quantity, minStock: inventory.minStock, maxStock: inventory.maxStock,
       costPrice: products.costPrice, sellPrice: products.sellPrice, isActive: products.isActive,
       binLocation: inventory.binLocation, warehouseZone: inventory.warehouseZone,
-    }).from(products).leftJoin(inventory, eq(inventory.productId, products.id)).where(eq(products.isActive, true));
+    }).from(products).leftJoin(inventory, and(eq(inventory.productId, products.id), eq(inventory.warehouse, wh))).where(eq(products.isActive, true));
 
     const totalCost = allInv.reduce((s, r) => s + (r.quantity ?? 0) * parseFloat(String(r.costPrice)), 0);
     const totalSell = allInv.reduce((s, r) => s + (r.quantity ?? 0) * parseFloat(String(r.sellPrice)), 0);
@@ -287,7 +289,7 @@ router.get('/inventory', async (req: AuthRequest, res: Response): Promise<void> 
       date: sql<string>`date_trunc('day', ${stockMovements.createdAt})::date::text`,
       type: stockMovements.movementType,
       qty: sql<number>`sum(${stockMovements.quantity})`,
-    }).from(stockMovements).where(and(gte(stockMovements.createdAt, dateFrom), lte(stockMovements.createdAt, dateTo)))
+    }).from(stockMovements).where(and(gte(stockMovements.createdAt, dateFrom), lte(stockMovements.createdAt, dateTo), eq(stockMovements.warehouse, wh)))
       .groupBy(sql`date_trunc('day', ${stockMovements.createdAt})::date`, stockMovements.movementType)
       .orderBy(sql`date_trunc('day', ${stockMovements.createdAt})::date`);
 
@@ -304,7 +306,7 @@ router.get('/inventory', async (req: AuthRequest, res: Response): Promise<void> 
       outQty: sql<number>`sum(${stockMovements.quantity})`,
       moveCount: sql<number>`count(*)`,
     }).from(stockMovements).innerJoin(products, eq(products.id, stockMovements.productId))
-      .where(and(eq(stockMovements.movementType, 'OUT'), gte(stockMovements.createdAt, dateFrom), lte(stockMovements.createdAt, dateTo)))
+      .where(and(eq(stockMovements.movementType, 'OUT'), gte(stockMovements.createdAt, dateFrom), lte(stockMovements.createdAt, dateTo), eq(stockMovements.warehouse, wh)))
       .groupBy(stockMovements.productId, products.name, products.sku)
       .orderBy(desc(sql`sum(${stockMovements.quantity})`)).limit(15);
 
@@ -330,9 +332,9 @@ router.get('/inventory', async (req: AuthRequest, res: Response): Promise<void> 
 
 // ─── GET /api/reports/fulfillment ────────────────────────────────────────────
 router.get('/fulfillment', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
     const allOrders = await db.select({
       id: orders.id, status: orders.status, priority: orders.priority,
       createdAt: orders.createdAt, updatedAt: orders.updatedAt, shippedAt: orders.shippedAt,
@@ -411,13 +413,13 @@ router.get('/fulfillment', async (req: AuthRequest, res: Response): Promise<void
 
 // ─── GET /api/reports/shipments ───────────────────────────────────────────────
 router.get('/shipments', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     const allShips = await db.select({
       carrier: shipments.carrier, serviceType: shipments.serviceType, status: shipments.status,
       shippingCost: shipments.shippingCost, estimatedDelivery: shipments.estimatedDelivery,
       actualDelivery: shipments.actualDelivery, shippedAt: shipments.shippedAt,
-    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo)));
+    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo), eq(shipments.warehouse, wh)));
 
     const today = new Date(); today.setHours(0,0,0,0);
     const delivered = allShips.filter(s => s.status === 'delivered');
@@ -470,10 +472,10 @@ router.get('/shipments', async (req: AuthRequest, res: Response): Promise<void> 
 
 // ─── EXPORT: Sales Excel ───────────────────────────────────────────────────────
 router.get('/export/sales/excel', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     // Reuse sales data
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
     const activeFilter = and(orderFilter, sql`${orders.status} NOT IN ('cancelled','returned')`);
 
     const allOrders = await db.select({ status: orders.status, totalAmount: orders.totalAmount }).from(orders).where(orderFilter);
@@ -539,9 +541,9 @@ router.get('/export/sales/excel', async (req: AuthRequest, res: Response): Promi
 
 // ─── EXPORT: Sales PDF ────────────────────────────────────────────────────────
 router.get('/export/sales/pdf', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
     const activeFilter = and(orderFilter, sql`${orders.status} NOT IN ('cancelled','returned')`);
     const allOrders = await db.select({ status: orders.status, totalAmount: orders.totalAmount }).from(orders).where(orderFilter);
     const revenue = allOrders.filter(o=>!['cancelled','returned'].includes(o.status)).reduce((s,o)=>s+parseFloat(String(o.totalAmount)),0);
@@ -581,18 +583,18 @@ router.get('/export/sales/pdf', async (req: AuthRequest, res: Response): Promise
 
 // ─── EXPORT: Inventory Excel ──────────────────────────────────────────────────
 router.get('/export/inventory/excel', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     const allInv = await db.select({
       sku: products.sku, name: products.name, category: products.category, unit: products.unit,
       costPrice: products.costPrice, sellPrice: products.sellPrice,
       quantity: inventory.quantity, minStock: inventory.minStock, maxStock: inventory.maxStock,
       warehouseZone: inventory.warehouseZone, binLocation: inventory.binLocation,
-    }).from(products).leftJoin(inventory, eq(inventory.productId, products.id)).where(eq(products.isActive, true));
+    }).from(products).leftJoin(inventory, and(eq(inventory.productId, products.id), eq(inventory.warehouse, wh))).where(eq(products.isActive, true));
 
     const fastMovers = await db.select({ sku: products.sku, name: products.name, outQty: sql<number>`sum(${stockMovements.quantity})`, moveCount: sql<number>`count(*)` })
       .from(stockMovements).innerJoin(products, eq(products.id, stockMovements.productId))
-      .where(and(eq(stockMovements.movementType,'OUT'), gte(stockMovements.createdAt,dateFrom), lte(stockMovements.createdAt,dateTo)))
+      .where(and(eq(stockMovements.movementType,'OUT'), gte(stockMovements.createdAt,dateFrom), lte(stockMovements.createdAt,dateTo), eq(stockMovements.warehouse, wh)))
       .groupBy(products.id, products.sku, products.name).orderBy(desc(sql`sum(${stockMovements.quantity})`)).limit(50);
 
     const wb = new ExcelJS.Workbook(); wb.creator = 'ToyShop WMS'; wb.created = new Date();
@@ -631,13 +633,13 @@ router.get('/export/inventory/excel', async (req: AuthRequest, res: Response): P
 
 // ─── EXPORT: Inventory PDF ────────────────────────────────────────────────────
 router.get('/export/inventory/pdf', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     const allInv = await db.select({
       sku: products.sku, name: products.name, category: products.category,
       costPrice: products.costPrice, sellPrice: products.sellPrice,
       quantity: inventory.quantity, minStock: inventory.minStock, maxStock: inventory.maxStock,
-    }).from(products).leftJoin(inventory, eq(inventory.productId, products.id)).where(eq(products.isActive, true));
+    }).from(products).leftJoin(inventory, and(eq(inventory.productId, products.id), eq(inventory.warehouse, wh))).where(eq(products.isActive, true));
 
     const totalCost = allInv.reduce((s,r)=>s+(r.quantity??0)*parseFloat(String(r.costPrice)),0);
     const totalSell = allInv.reduce((s,r)=>s+(r.quantity??0)*parseFloat(String(r.sellPrice)),0);
@@ -674,9 +676,9 @@ router.get('/export/inventory/pdf', async (req: AuthRequest, res: Response): Pro
 
 // ─── EXPORT: Fulfillment Excel ────────────────────────────────────────────────
 router.get('/export/fulfillment/excel', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
     const allOrders = await db.select({
       orderNumber: orders.orderNumber, status: orders.status, priority: orders.priority,
       totalAmount: orders.totalAmount, createdAt: orders.createdAt, shippedAt: orders.shippedAt,
@@ -715,9 +717,9 @@ router.get('/export/fulfillment/excel', async (req: AuthRequest, res: Response):
 
 // ─── EXPORT: Fulfillment PDF ──────────────────────────────────────────────────
 router.get('/export/fulfillment/pdf', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
-    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo));
+    const orderFilter = and(gte(orders.createdAt, dateFrom), lte(orders.createdAt, dateTo), eq(orders.warehouse, wh));
     const allOrders = await db.select({
       id: orders.id, status: orders.status, priority: orders.priority,
       createdAt: orders.createdAt, shippedAt: orders.shippedAt,
@@ -795,14 +797,14 @@ router.get('/export/fulfillment/pdf', async (req: AuthRequest, res: Response): P
 
 // ─── EXPORT: Shipments Excel ──────────────────────────────────────────────────
 router.get('/export/shipments/excel', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     const allShips = await db.select({
       carrier: shipments.carrier, serviceType: shipments.serviceType, status: shipments.status,
       shippingCost: shipments.shippingCost, trackingNumber: shipments.trackingNumber,
       estimatedDelivery: shipments.estimatedDelivery, actualDelivery: shipments.actualDelivery,
       shippedAt: shipments.shippedAt, createdAt: shipments.createdAt,
-    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo)))
+    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo), eq(shipments.warehouse, wh)))
       .orderBy(desc(shipments.createdAt));
 
     const delivered = allShips.filter(s => s.status === 'delivered');
@@ -878,13 +880,13 @@ router.get('/export/shipments/excel', async (req: AuthRequest, res: Response): P
 
 // ─── EXPORT: Shipments PDF ────────────────────────────────────────────────────
 router.get('/export/shipments/pdf', async (req: AuthRequest, res: Response): Promise<void> => {
-  const { dateFrom, dateTo } = parseDates(req);
+  const { dateFrom, dateTo, wh } = parseDates(req);
   try {
     const allShips = await db.select({
       carrier: shipments.carrier, serviceType: shipments.serviceType, status: shipments.status,
       shippingCost: shipments.shippingCost, estimatedDelivery: shipments.estimatedDelivery,
       actualDelivery: shipments.actualDelivery, shippedAt: shipments.shippedAt,
-    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo)));
+    }).from(shipments).where(and(gte(shipments.createdAt, dateFrom), lte(shipments.createdAt, dateTo), eq(shipments.warehouse, wh)));
 
     const delivered = allShips.filter(s => s.status === 'delivered');
     const onTime = delivered.filter(s => s.estimatedDelivery && s.actualDelivery && new Date(s.actualDelivery) <= new Date(s.estimatedDelivery)).length;

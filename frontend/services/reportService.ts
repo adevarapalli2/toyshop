@@ -54,18 +54,18 @@ async function downloadFile(url: string, filename: string) {
 }
 
 export const reportService = {
-  executive: (p?:{from?:string;to?:string}) => api.get<{success:boolean;kpi:ExecKpi;revenueTrend:{date:string;revenue:number;orders:number}[]}>(`${BASE}/executive`,{params:p}),
-  sales: (p?:{from?:string;to?:string}) => api.get<{success:boolean}&SalesData>(`${BASE}/sales`,{params:p}),
-  inventory: (p?:{from?:string;to?:string}) => api.get<{success:boolean}&InventoryData>(`${BASE}/inventory`,{params:p}),
-  fulfillment: (p?:{from?:string;to?:string}) => api.get<{success:boolean}&FulfillmentData>(`${BASE}/fulfillment`,{params:p}),
-  shipments: (p?:{from?:string;to?:string}) => api.get<{success:boolean}&ShipmentsReportData>(`${BASE}/shipments`,{params:p}),
+  executive: (p?:{from?:string;to?:string;warehouse?:string}) => api.get<{success:boolean;kpi:ExecKpi;revenueTrend:{date:string;revenue:number;orders:number}[]}>(`${BASE}/executive`,{params:p}),
+  sales: (p?:{from?:string;to?:string;warehouse?:string}) => api.get<{success:boolean}&SalesData>(`${BASE}/sales`,{params:p}),
+  inventory: (p?:{from?:string;to?:string;warehouse?:string}) => api.get<{success:boolean}&InventoryData>(`${BASE}/inventory`,{params:p}),
+  fulfillment: (p?:{from?:string;to?:string;warehouse?:string}) => api.get<{success:boolean}&FulfillmentData>(`${BASE}/fulfillment`,{params:p}),
+  shipments: (p?:{from?:string;to?:string;warehouse?:string}) => api.get<{success:boolean}&ShipmentsReportData>(`${BASE}/shipments`,{params:p}),
 
-  downloadSalesExcel:       (from:string,to:string) => downloadFile(`/api/reports/export/sales/excel?from=${from}&to=${to}`,       `sales-report-${from}.xlsx`),
-  downloadSalesPdf:         (from:string,to:string) => downloadFile(`/api/reports/export/sales/pdf?from=${from}&to=${to}`,         `sales-report-${from}.pdf`),
-  downloadInventoryExcel:   (from:string,to:string) => downloadFile(`/api/reports/export/inventory/excel?from=${from}&to=${to}`,   `inventory-report-${from}.xlsx`),
-  downloadInventoryPdf:     (from:string,to:string) => downloadFile(`/api/reports/export/inventory/pdf?from=${from}&to=${to}`,     `inventory-report-${from}.pdf`),
-  downloadFulfillmentExcel: (from:string,to:string) => downloadFile(`/api/reports/export/fulfillment/excel?from=${from}&to=${to}`, `fulfillment-report-${from}.xlsx`),
-  downloadFulfillmentPdf:   (from:string,to:string) => downloadFile(`/api/reports/export/fulfillment/pdf?from=${from}&to=${to}`,   `fulfillment-report-${from}.pdf`),
-  downloadShipmentsExcel:   (from:string,to:string) => downloadFile(`/api/reports/export/shipments/excel?from=${from}&to=${to}`,   `shipments-report-${from}.xlsx`),
-  downloadShipmentsPdf:     (from:string,to:string) => downloadFile(`/api/reports/export/shipments/pdf?from=${from}&to=${to}`,     `shipments-report-${from}.pdf`),
+  downloadSalesExcel:       (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/sales/excel?from=${from}&to=${to}&warehouse=${wh}`,       `sales-report-${from}.xlsx`),
+  downloadSalesPdf:         (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/sales/pdf?from=${from}&to=${to}&warehouse=${wh}`,         `sales-report-${from}.pdf`),
+  downloadInventoryExcel:   (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/inventory/excel?from=${from}&to=${to}&warehouse=${wh}`,   `inventory-report-${from}.xlsx`),
+  downloadInventoryPdf:     (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/inventory/pdf?from=${from}&to=${to}&warehouse=${wh}`,     `inventory-report-${from}.pdf`),
+  downloadFulfillmentExcel: (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/fulfillment/excel?from=${from}&to=${to}&warehouse=${wh}`, `fulfillment-report-${from}.xlsx`),
+  downloadFulfillmentPdf:   (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/fulfillment/pdf?from=${from}&to=${to}&warehouse=${wh}`,   `fulfillment-report-${from}.pdf`),
+  downloadShipmentsExcel:   (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/shipments/excel?from=${from}&to=${to}&warehouse=${wh}`,   `shipments-report-${from}.xlsx`),
+  downloadShipmentsPdf:     (from:string,to:string,wh:string) => downloadFile(`/api/reports/export/shipments/pdf?from=${from}&to=${to}&warehouse=${wh}`,     `shipments-report-${from}.pdf`),
 };

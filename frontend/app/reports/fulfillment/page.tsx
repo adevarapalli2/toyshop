@@ -33,6 +33,7 @@ const ROLE_TAG_COLORS:Record<string,string>={admin:'blue',manager:'purple',staff
 export default function FulfillmentReport() {
   const router=useRouter();
   const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [data,setData]=useState<FulfillmentData|null>(null);
   const [loading,setLoading]=useState(true);
   const [downloading,setDownloading]=useState<string|null>(null);
@@ -46,10 +47,10 @@ export default function FulfillmentReport() {
     if(!user)return;
     const {from,to}=buildRange(rel,selMo,selYr);
     setLoading(true);
-    const r=await reportService.fulfillment({from,to});
+    const r=await reportService.fulfillment({from,to,warehouse:selectedWarehouse});
     setData(r.data as unknown as FulfillmentData);
     setLoading(false);
-  },[user,rel,selMo,selYr]);
+  },[user,rel,selMo,selYr,selectedWarehouse]);
 
   useEffect(()=>{load();},[load]);
 
@@ -86,11 +87,11 @@ export default function FulfillmentReport() {
             </div>
             <div className={styles.exportRow}>
               <button className={`${styles.exportBtn} ${styles.excelBtn}`} disabled={downloading==='excel'}
-                onClick={()=>dl(()=>reportService.downloadFulfillmentExcel(from,to),'excel')}>
+                onClick={()=>dl(()=>reportService.downloadFulfillmentExcel(from,to,selectedWarehouse),'excel')}>
                 <FileExcelOutlined/> {downloading==='excel'?'Generating…':'Export Excel'}
               </button>
               <button className={`${styles.exportBtn} ${styles.pdfBtn}`} disabled={downloading==='pdf'}
-                onClick={()=>dl(()=>reportService.downloadFulfillmentPdf(from,to),'pdf')}>
+                onClick={()=>dl(()=>reportService.downloadFulfillmentPdf(from,to,selectedWarehouse),'pdf')}>
                 <FilePdfOutlined/> {downloading==='pdf'?'Generating…':'Export PDF'}
               </button>
             </div>

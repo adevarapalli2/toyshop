@@ -37,6 +37,7 @@ const HEALTH_COLORS=['#10b981','#f59e0b','#ef4444','#3b82f6'];
 export default function ReportsHub() {
   const router=useRouter();
   const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [kpi,setKpi]=useState<ExecKpi|null>(null);
   const [trend,setTrend]=useState<{date:string;revenue:number;orders:number}[]>([]);
   const [loading,setLoading]=useState(true);
@@ -51,10 +52,10 @@ export default function ReportsHub() {
     if(!user)return;
     const {from,to}=buildRange(rel,selMo,selYr);
     setLoading(true);
-    const r=await reportService.executive({from,to});
+    const r=await reportService.executive({from,to,warehouse:selectedWarehouse});
     setKpi(r.data.kpi); setTrend(r.data.revenueTrend??[]);
     setLoading(false);
-  },[user,rel,selMo,selYr]);
+  },[user,rel,selMo,selYr,selectedWarehouse]);
 
   useEffect(()=>{load();},[load]);
 
@@ -150,20 +151,20 @@ export default function ReportsHub() {
                       {r.excel&&<button className={`${styles.exportBtn} ${styles.excelBtn}`}
                         disabled={downloading===`${r.key}-excel`}
                         onClick={async()=>{
-                          if(r.key==='sales')        await dl(()=>reportService.downloadSalesExcel(from,to),`${r.key}-excel`);
-                          if(r.key==='inventory')    await dl(()=>reportService.downloadInventoryExcel(from,to),`${r.key}-excel`);
-                          if(r.key==='fulfillment')  await dl(()=>reportService.downloadFulfillmentExcel(from,to),`${r.key}-excel`);
-                          if(r.key==='shipments')    await dl(()=>reportService.downloadShipmentsExcel(from,to),`${r.key}-excel`);
+                          if(r.key==='sales')        await dl(()=>reportService.downloadSalesExcel(from,to,selectedWarehouse),`${r.key}-excel`);
+                          if(r.key==='inventory')    await dl(()=>reportService.downloadInventoryExcel(from,to,selectedWarehouse),`${r.key}-excel`);
+                          if(r.key==='fulfillment')  await dl(()=>reportService.downloadFulfillmentExcel(from,to,selectedWarehouse),`${r.key}-excel`);
+                          if(r.key==='shipments')    await dl(()=>reportService.downloadShipmentsExcel(from,to,selectedWarehouse),`${r.key}-excel`);
                         }}>
                         <FileExcelOutlined/> {downloading===`${r.key}-excel`?'…':'Excel'}
                       </button>}
                       {r.pdf&&<button className={`${styles.exportBtn} ${styles.pdfBtn}`}
                         disabled={downloading===`${r.key}-pdf`}
                         onClick={async()=>{
-                          if(r.key==='sales')        await dl(()=>reportService.downloadSalesPdf(from,to),`${r.key}-pdf`);
-                          if(r.key==='inventory')    await dl(()=>reportService.downloadInventoryPdf(from,to),`${r.key}-pdf`);
-                          if(r.key==='fulfillment')  await dl(()=>reportService.downloadFulfillmentPdf(from,to),`${r.key}-pdf`);
-                          if(r.key==='shipments')    await dl(()=>reportService.downloadShipmentsPdf(from,to),`${r.key}-pdf`);
+                          if(r.key==='sales')        await dl(()=>reportService.downloadSalesPdf(from,to,selectedWarehouse),`${r.key}-pdf`);
+                          if(r.key==='inventory')    await dl(()=>reportService.downloadInventoryPdf(from,to,selectedWarehouse),`${r.key}-pdf`);
+                          if(r.key==='fulfillment')  await dl(()=>reportService.downloadFulfillmentPdf(from,to,selectedWarehouse),`${r.key}-pdf`);
+                          if(r.key==='shipments')    await dl(()=>reportService.downloadShipmentsPdf(from,to,selectedWarehouse),`${r.key}-pdf`);
                         }}>
                         <FilePdfOutlined/> {downloading===`${r.key}-pdf`?'…':'PDF'}
                       </button>}

@@ -32,6 +32,7 @@ const fmt=(n:number)=>`₹${n.toLocaleString('en-IN',{maximumFractionDigits:0})}
 export default function ShipmentsReport() {
   const router=useRouter();
   const {user,initializing}=useSelector((s:RootState)=>s.auth);
+  const selectedWarehouse=useSelector((s:RootState)=>s.warehouse.selected);
   const [data,setData]=useState<ShipmentsReportData|null>(null);
   const [loading,setLoading]=useState(true);
   const [downloading,setDownloading]=useState<string|null>(null);
@@ -45,10 +46,10 @@ export default function ShipmentsReport() {
     if(!user)return;
     const {from,to}=buildRange(rel,selMo,selYr);
     setLoading(true);
-    const r=await reportService.shipments({from,to});
+    const r=await reportService.shipments({from,to,warehouse:selectedWarehouse});
     setData(r.data as unknown as ShipmentsReportData);
     setLoading(false);
-  },[user,rel,selMo,selYr]);
+  },[user,rel,selMo,selYr,selectedWarehouse]);
 
   useEffect(()=>{load();},[load]);
 
@@ -76,11 +77,11 @@ export default function ShipmentsReport() {
             </div>
             <div className={styles.exportRow}>
               <button className={`${styles.exportBtn} ${styles.excelBtn}`} disabled={downloading==='excel'}
-                onClick={()=>dl(()=>reportService.downloadShipmentsExcel(from,to),'excel')}>
+                onClick={()=>dl(()=>reportService.downloadShipmentsExcel(from,to,selectedWarehouse),'excel')}>
                 <FileExcelOutlined/> {downloading==='excel'?'Generating…':'Export Excel'}
               </button>
               <button className={`${styles.exportBtn} ${styles.pdfBtn}`} disabled={downloading==='pdf'}
-                onClick={()=>dl(()=>reportService.downloadShipmentsPdf(from,to),'pdf')}>
+                onClick={()=>dl(()=>reportService.downloadShipmentsPdf(from,to,selectedWarehouse),'pdf')}>
                 <FilePdfOutlined/> {downloading==='pdf'?'Generating…':'Export PDF'}
               </button>
             </div>
