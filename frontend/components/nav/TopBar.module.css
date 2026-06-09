@@ -4,32 +4,134 @@
   justify-content: space-between;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
-  padding: 0 28px;
+  padding: 0 24px;
   height: 60px;
   position: sticky;
   top: 0;
   z-index: 50;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  gap: 16px;
 }
 
 .left {
   display: flex;
   align-items: center;
+  min-width: 120px;
+  flex-shrink: 0;
 }
 
 .title {
   font-size: 15px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
 }
 
+/* ── Warehouse Switcher (centre) ─────────────────── */
+.center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.whSwitcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 40px;
+  padding: 4px 6px 4px 12px;
+}
+
+.whIcon {
+  font-size: 14px;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.whPills {
+  display: flex;
+  gap: 4px;
+}
+
+.whPill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 30px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+
+.whPill:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.whPillActive {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.25);
+  font-weight: 700;
+}
+
+.whCode {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  opacity: 0.75;
+}
+
+.whPillActive .whCode {
+  opacity: 0.85;
+}
+
+.whName {
+  font-size: 13px;
+}
+
+.whAddBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px dashed #94a3b8;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.18s;
+  flex-shrink: 0;
+}
+
+.whAddBtn:hover {
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+/* ── Right ───────────────────────────────────────── */
 .right {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 120px;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
-/* Profile button */
 .profileBtn {
   display: flex;
   align-items: center;
@@ -37,7 +139,7 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 40px;
-  padding: 5px 14px 5px 5px;
+  padding: 4px 14px 4px 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -49,14 +151,14 @@
 }
 
 .avatar {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, #1d4ed8, #0ea5e9);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   color: #fff;
   flex-shrink: 0;
@@ -69,7 +171,7 @@
 }
 
 .userName {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #1e293b;
   white-space: nowrap;
@@ -89,7 +191,6 @@
   margin-left: 2px;
 }
 
-/* Dropdown info section */
 .dropdownInfo {
   padding: 4px 2px;
   min-width: 180px;
