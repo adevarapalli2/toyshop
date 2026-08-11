@@ -43,6 +43,13 @@
       "when": 1780948800000,
       "tag": "0005_20260609_add_warehouse_to_orders_shipments",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781035200000,
+      "tag": "0006_20260610_add_inventory_snapshots",
+      "breakpoints": true
     }
   ]
 }

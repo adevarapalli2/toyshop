@@ -73,6 +73,7 @@ export default function InventoryOverview() {
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [recent, setRecent] = useState<MovementRow[]>([]);
   const [periodSummary, setPeriodSummary] = useState<{ totalIn: number; totalOut: number; totalAdj: number; count: number } | null>(null);
+  const [asOfDate, setAsOfDate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Filter state
@@ -93,6 +94,7 @@ export default function InventoryOverview() {
       setAlerts(r.data.alerts);
       setRecent(r.data.recentMovements);
       setPeriodSummary(r.data.periodSummary ?? null);
+      setAsOfDate(r.data.asOfDate ?? null);
     } finally { setLoading(false); }
   }, [user, relative, selMonth, selYear, selectedWarehouse]);
 
@@ -156,6 +158,11 @@ export default function InventoryOverview() {
           </div>
 
           {/* ── KPI Row ────────────────────────────────── */}
+          {relative !== 'today' && asOfDate && (
+            <div className={styles.dateRange} style={{ marginBottom: 4 }}>
+              📌 Showing inventory levels as of <b>{asOfDate}</b> (start of {dateLabel.toLowerCase()})
+            </div>
+          )}
           <div className={styles.kpiRow}>
             {kpiCards.map(k => (
               <button key={k.label} className={styles.kpiCard} onClick={() => router.push(k.href)}>

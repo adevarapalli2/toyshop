@@ -3,6 +3,7 @@ import { eq, desc, ilike, and, gte, lte, sql } from 'drizzle-orm';
 import { db } from '../db/index';
 import { products } from '../db/schema/products';
 import { inventory } from '../db/schema/inventory';
+import { inventorySnapshots } from '../db/schema/inventorySnapshots';
 import { stockMovements } from '../db/schema/stockMovements';
 import { users } from '../db/schema/users';
 import { authenticate, AuthRequest } from '../middleware/auth';
@@ -18,9 +19,13 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
   const dateTo = to ? new Date(to) : null;
   if (dateTo) dateTo.setHours(23, 59, 59, 999);
   const wh = warehouse;
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const fromStr = dateFrom ? dateFrom.toISOString().slice(0, 10) : todayStr;
+  const isHistorical = fromStr !== todayStr;
   try {
     const allRows = await db
       .select({
+        productId: inventory.productId,
         quantity: inventory.quantity, minStock: inventory.minStock,
         maxStock: inventory.maxStock, costPrice: products.costPrice,
         category: products.category, isActive: products.isActive,
@@ -29,7 +34,62 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
       .innerJoin(products, eq(products.id, inventory.productId))
       .where(and(eq(products.isActive, true), eq(inventory.warehouse, wh)));
 
-    const kpi = allRows.reduce((acc, r) => {
+    // Write-on-read: keep today's snapshot in sync with live inventory
+    if (allRows.length > 0) {
+      await db.insert(inventorySnapshots).values(allRows.map(r => ({
+        productId: r.productId,
+        warehouse: wh,
+        snapshotDate: todayStr,
+        quantity: r.quantity,
+        minStock: r.minStock,
+        maxStock: r.maxStock,
+        costPrice: r.costPrice,
+        category: r.category,
+      }))).onConflictDoUpdate({
+        target: [inventorySnapshots.productId, inventorySnapshots.warehouse, inventorySnapshots.snapshotDate],
+        set: {
+          quantity: sql`excluded.quantity`,
+          minStock: sql`excluded.min_stock`,
+          maxStock: sql`excluded.max_stock`,
+          costPrice: sql`excluded.cost_price`,
+          category: sql`excluded.category`,
+        },
+      });
+    }
+
+    let kpiRows: { quantity: number | null; minStock: number | null; maxStock: number | null; costPrice: string | null; category: string }[] = allRows;
+    let asOfDate = todayStr;
+
+    if (isHistorical) {
+      const snapResult = await db.execute(sql`
+        SELECT DISTINCT ON (product_id) product_id, quantity, min_stock, max_stock, cost_price, category, snapshot_date
+        FROM inventory_snapshots
+        WHERE warehouse = ${wh} AND snapshot_date <= ${fromStr}
+        ORDER BY product_id, snapshot_date DESC
+      `);
+      let snapRows = snapResult.rows as Array<{ product_id: number; quantity: number; min_stock: number; max_stock: number; cost_price: string; category: string; snapshot_date: string | Date }>;
+
+      if (snapRows.length === 0) {
+        const earliestResult = await db.execute(sql`
+          SELECT DISTINCT ON (product_id) product_id, quantity, min_stock, max_stock, cost_price, category, snapshot_date
+          FROM inventory_snapshots
+          WHERE warehouse = ${wh}
+          ORDER BY product_id, snapshot_date ASC
+        `);
+        snapRows = earliestResult.rows as typeof snapRows;
+      }
+
+      if (snapRows.length > 0) {
+        kpiRows = snapRows.map(r => ({
+          quantity: r.quantity, minStock: r.min_stock, maxStock: r.max_stock,
+          costPrice: r.cost_price, category: r.category,
+        }));
+        const d = new Date(snapRows[0].snapshot_date);
+        asOfDate = d.toISOString().slice(0, 10);
+      }
+    }
+
+    const kpi = kpiRows.reduce((acc, r) => {
       const qty = r.quantity ?? 0;
       acc.totalSkus++;
       acc.totalValue += qty * parseFloat(String(r.costPrice ?? 0));
@@ -41,7 +101,7 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
     }, { totalSkus: 0, inStock: 0, lowStock: 0, outOfStock: 0, overstock: 0, totalValue: 0 });
 
     const catMap: Record<string, { inStock: number; lowStock: number; outOfStock: number }> = {};
-    for (const r of allRows) {
+    for (const r of kpiRows) {
       const cat = r.category;
       if (!catMap[cat]) catMap[cat] = { inStock: 0, lowStock: 0, outOfStock: 0 };
       const qty = r.quantity ?? 0;
@@ -99,7 +159,7 @@ router.get('/overview', async (req: AuthRequest, res: Response): Promise<void> =
       .from(stockMovements)
       .where(movDateFilter);
 
-    res.json({ success: true, kpi, categoryChart, alerts, recentMovements: recent, periodSummary });
+    res.json({ success: true, kpi, categoryChart, alerts, recentMovements: recent, periodSummary, asOfDate });
   } catch (err) { console.error(err); res.status(500).json({ success: false, message: 'Server error' }); }
 });
 

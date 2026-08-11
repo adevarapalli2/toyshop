@@ -47,6 +47,7 @@ export const inventoryService = {
     categoryChart: { category: string; inStock: number; lowStock: number; outOfStock: number }[];
     alerts: AlertRow[]; recentMovements: MovementRow[];
     periodSummary: { totalIn: number; totalOut: number; totalAdj: number; count: number };
+    asOfDate: string;
   }>('/api/inventory/overview', { params }),
 
   movements: (p?: { search?: string; type?: string; page?: number; limit?: number; warehouse?: string }) =>
